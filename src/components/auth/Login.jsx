@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
+import { auth, db } from "../../firebaseConfig.js";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import Logo from "../../assets/Logo-Transparent.png";
+import Spinner from "../../components/ui/Spinner.jsx";
+import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
+import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
 
 export default function Login() {
   // States
@@ -11,13 +17,18 @@ export default function Login() {
   const [passwordError, setPasswordError] = useState("");
   const [agree, setAgree] = useState(false);
   const [agreeError, setAgreeError] = useState("");
-  const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Email pattern validation
+  // Popup & spinner states
+  const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+
+  // Email regex
   const emailRegex = /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.com$/i;
 
-  // Password patterns validation
+  // Password checks
   const hasUppercase = /[A-Z]/;
   const hasLowercase = /[a-z]/;
   const hasNumber = /[0-9]/;
@@ -27,7 +38,6 @@ export default function Login() {
   const handleEmailError = (value) => {
     const emailValue = value.replace(/\s/g, "");
     setEmail(emailValue);
-
     if (!emailValue) return setEmailError("Please enter email");
     if (!emailRegex.test(emailValue))
       return setEmailError("Oops, this appears to be an invalid email");
@@ -55,13 +65,14 @@ export default function Login() {
   };
 
   // Submit form
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccess("");
     setAgreeError("");
+    setShowError(false);
+    setShowSuccess(false);
+    setPopupMessage("");
 
     let hasError = false;
-
     if (!email) {
       setEmailError("Please enter email");
       hasError = true;
@@ -74,42 +85,79 @@ export default function Login() {
       setAgreeError("You must agree to the Terms and Privacy");
       hasError = true;
     }
-
     if (emailError || passwordError || hasError) return;
 
-    // Simulate success → later DB check will decide if user is admin or normal user
-    setSuccess("Login Successful! Redirecting...");
-    setTimeout(() => {
-      console.log("Redirecting... will check role from DB here.");
-      window.location.href = "/dashboard"; // placeholder → will update with DB role
-    }, 2000);
+    try {
+      setLoading(true);
+
+      // ✅ Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // ✅ Check role in Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      let role = "user";
+      if (userDoc.exists()) {
+        role = userDoc.data().role || "user";
+      }
+
+      setLoading(false);
+      setPopupMessage("Login successful!");
+      setShowSuccess(true);
+
+      // ✅ Redirect based on role
+      setTimeout(() => {
+        if (role === "admin") {
+          window.location.href = "/admin-dashboard";
+        } else {
+          window.location.href = "/dashboard";
+        }
+      }, 2000);
+    } catch (error) {
+      setLoading(false);
+      console.error("Login error:", error);
+
+      if (error.code === "auth/user-not-found") {
+        setPopupMessage("Account not found. Please create one.");
+      } else if (error.code === "auth/wrong-password") {
+        setPopupMessage("Incorrect password. Please try again.");
+      } else if (error.code === "auth/too-many-requests") {
+        setPopupMessage("Too many attempts. Try again later.");
+      } else {
+        setPopupMessage("Something went wrong. Please try again.");
+      }
+      setShowError(true);
+      // auto-hide error after 4s
+      setTimeout(() => {
+        setShowError(false);
+      }, 3000);
+    }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center  px-4">
+    <div className="min-h-screen w-full flex items-center justify-center px-4">
+      {/* Spinner */}
+      <Spinner show={loading} message="Logging you in..." />
+      <SuccessPopup show={showSuccess} message={popupMessage} />
+      <ErrorPopup show={showError} message={popupMessage} />
+
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg border border-gray-300  bg-gray-50  p-8 rounded-lg text-gray-600"
+        className="w-full max-w-lg border border-gray-300 bg-gray-50 p-8 rounded-lg text-gray-600"
         noValidate
       >
-        <div className="flex mb-4 flex-col  mx-auto max-w-45 items-center ">
+        <div className="flex mb-4 flex-col mx-auto max-w-45 items-center">
           <img src={Logo} alt="Wastepickup logo" className="max-w-35 h-auto" />
-          <p className="text-sm text-gray-400 mb-4 text-center">Clean homes, Stay hygienic</p>
+          <p className="text-sm text-gray-400 mb-4 text-center">
+            Clean homes, Stay hygienic
+          </p>
         </div>
-
-        {/* Success message */}
-        {success && (
-          <div className="bg-green-100 text-green-700 text-sm p-2 rounded mb-4 text-center">
-            {success}
-          </div>
-        )}
 
         {/* Email */}
         <div className="mb-4">
           <label className="block text-sm mb-1 text-gray-500">Email</label>
-          <div className="flex items-center border rounded px-2  border-gray-400">
+          <div className="flex items-center border rounded px-2 border-gray-400">
             <Icon icon="hugeicons:mail-01" width="18" height="18" className="text-gray-400" />
-
             <input
               type="email"
               className="flex-1 p-2 outline-none"
@@ -124,10 +172,8 @@ export default function Login() {
         {/* Password */}
         <div className="mb-4">
           <label className="block text-sm mb-1 text-gray-500">Password</label>
-          <div className="flex items-center border rounded px-2  border-gray-400">
+          <div className="flex items-center border rounded px-2 border-gray-400">
             <Icon icon="hugeicons:square-lock-password" width="20" height="20" className="text-gray-400" />
-
-
             <input
               type={showPassword ? "text" : "password"}
               className="flex-1 p-2 outline-none"
@@ -143,23 +189,17 @@ export default function Login() {
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
-          {passwordError && (
-            <p className="text-red-500 text-xs mt-1">{passwordError}</p>
-          )}
+          {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
           <div className="text-gray-500 text-sm mt-5 mb-5 flex justify-start items-center gap-1">
-            <span>
-              Forgot password?
-            </span>
-            <Link
-              to="/ForgotPassword"
-              className="text-sm text-[rgb(36,157,119)] hover:underline"
-            >              Reset password?
+            <span>Forgot password?</span>
+            <Link to="/ForgotPassword" className="text-sm text-[rgb(36,157,119)] hover:underline">
+              Reset password
             </Link>
           </div>
         </div>
 
         {/* Terms */}
-        <div className="mb-4 flex items-center  text-gray-500">
+        <div className="mb-4 flex items-center text-gray-500">
           <input
             type="checkbox"
             id="agree"

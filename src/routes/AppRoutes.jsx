@@ -2,8 +2,11 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "../components/auth/Login";
 import ForgotPassword from "../components/auth/ForgotPassword";
 import CreateAccount from "../pages/user/CreateAccount";
-import TermsPrivacy from "../components/ui/TermsPrivacy";
+import TermsPrivacy from "../pages/TermsPrivacy";
 
+// Dashboards
+import UserDashboard from "../pages/user/UserDashboard";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 
 export default function AppRoutes() {
   return (
@@ -17,12 +20,16 @@ export default function AppRoutes() {
         {/* Admin login */}
         <Route path="/admin/login" element={<Login role="admin" />} />
 
-               {/* Create Account */}
-        <Route path="/createAccount" element={<CreateAccount />} />
-        <Route path="/termsPrivacy" element={<TermsPrivacy />} />
+        {/* Create Account */}
+        <Route path="/createaccount" element={<CreateAccount />} />
+        <Route path="/termsprivacy" element={<TermsPrivacy />} />
 
+        {/* User Dashboard */}
+        <Route path="/dashboard" element={<UserDashboard />} />
+
+        {/* Admin Dashboard */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
 }
-
