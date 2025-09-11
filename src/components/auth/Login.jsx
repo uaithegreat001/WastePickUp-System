@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
+import Logo from "../../assets/Logo-Transparent.png";
 
 export default function Login() {
   // States
@@ -88,16 +89,13 @@ export default function Login() {
     <div className="min-h-screen w-full flex items-center justify-center  px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg border border-gray-300  bg-gray-50  p-8 rounded-lg"
+        className="w-full max-w-lg border border-gray-300  bg-gray-50  p-8 rounded-lg text-gray-600"
         noValidate
       >
-        {/* Heading */}
-        <h2 className="text-xl font-semibold mb-2 text-center">
-          Welcome back to <span className="text-[rgb(36,157,119)]">WastePickUp</span>
-        </h2>
-        <p className="text-sm text-gray-500 mb-6 text-center">
-          Clean homes, Stay hygienic
-        </p>
+        <div className="flex mb-4 flex-col  mx-auto max-w-45 items-center ">
+          <img src={Logo} alt="Wastepickup logo" className="max-w-35 h-auto" />
+          <p className="text-sm text-gray-400 mb-4 text-center">Clean homes, Stay hygienic</p>
+        </div>
 
         {/* Success message */}
         {success && (
@@ -108,9 +106,10 @@ export default function Login() {
 
         {/* Email */}
         <div className="mb-4">
-          <label className="block text-sm mb-1">Email</label>
-          <div className="flex items-center border rounded px-2">
-            <Icon icon="mdi:email-outline" className="text-gray-500" />
+          <label className="block text-sm mb-1 text-gray-500">Email</label>
+          <div className="flex items-center border rounded px-2  border-gray-400">
+            <Icon icon="hugeicons:mail-01" width="18" height="18" className="text-gray-400" />
+
             <input
               type="email"
               className="flex-1 p-2 outline-none"
@@ -124,9 +123,11 @@ export default function Login() {
 
         {/* Password */}
         <div className="mb-4">
-          <label className="block text-sm mb-1">Password</label>
-          <div className="flex items-center border rounded px-2">
-            <Icon icon="mdi:lock-outline" className="text-gray-500" />
+          <label className="block text-sm mb-1 text-gray-500">Password</label>
+          <div className="flex items-center border rounded px-2  border-gray-400">
+            <Icon icon="hugeicons:square-lock-password" width="20" height="20" className="text-gray-400" />
+
+
             <input
               type={showPassword ? "text" : "password"}
               className="flex-1 p-2 outline-none"
@@ -145,18 +146,20 @@ export default function Login() {
           {passwordError && (
             <p className="text-red-500 text-xs mt-1">{passwordError}</p>
           )}
-          <div className="text-right mt-1">
-            <Link
-              to="/forgot-password"
-              className="text-xs text-[rgb(36,157,119)] hover:underline"
-            >
+          <div className="text-gray-500 text-sm mt-5 mb-5 flex justify-start items-center gap-1">
+            <span>
               Forgot password?
+            </span>
+            <Link
+              to="/ForgotPassword"
+              className="text-sm text-[rgb(36,157,119)] hover:underline"
+            >              Reset password?
             </Link>
           </div>
         </div>
 
         {/* Terms */}
-        <div className="mb-4 flex items-center">
+        <div className="mb-4 flex items-center  text-gray-500">
           <input
             type="checkbox"
             id="agree"

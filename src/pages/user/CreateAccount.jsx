@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
+import { auth, db } from "../../firebaseConfig.js";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import Logo from "../../assets/Logo-Transparent.png";
+import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
+import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
+import Spinner from "../../components/ui/Spinner.jsx";
 
 export default function CreateAccount() {
   const [name, setName] = useState("");
@@ -11,6 +18,7 @@ export default function CreateAccount() {
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [address, setAddress] = useState("");
   const [addressError, setAddressError] = useState("");
   const [zip, setZip] = useState("");
@@ -19,19 +27,20 @@ export default function CreateAccount() {
   const [lgaError, setLgaError] = useState("");
   const [agree, setAgree] = useState(false);
   const [agreeError, setAgreeError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
 
-  // ✅ Email validation
+  // Email validation
   const emailRegex = /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.com$/i;
 
-  // ✅ Password checks
+  // Password checks
   const hasUppercase = /[A-Z]/;
   const hasLowercase = /[a-z]/;
   const hasNumber = /[0-9]/;
   const hasSpecial = /[^A-Za-z0-9]/;
 
-  // ✅ Name validation
   const handleNameChange = (value) => {
     setName(value);
     if (!value.trim()) return setNameError("Please enter your full name");
@@ -42,7 +51,6 @@ export default function CreateAccount() {
     setNameError("");
   };
 
-  // ✅ Phone validation (Nigerian standard: 11 digits, must start with 0)
   const handlePhoneChange = (value) => {
     setPhone(value);
     if (!/^0\d{10}$/.test(value))
@@ -50,7 +58,6 @@ export default function CreateAccount() {
     setPhoneError("");
   };
 
-  // ✅ Email validation
   const handleEmailChange = (value) => {
     const clean = value.replace(/\s/g, "");
     setEmail(clean);
@@ -60,7 +67,6 @@ export default function CreateAccount() {
     setEmailError("");
   };
 
-  // ✅ Password validation
   const handlePasswordChange = (value) => {
     const pass = value.replace(/\s/g, "");
     setPassword(pass);
@@ -77,7 +83,6 @@ export default function CreateAccount() {
     setPasswordError("");
   };
 
-  // ✅ Address validation
   const handleAddressChange = (value) => {
     setAddress(value);
     if (!value.trim()) return setAddressError("Please enter address");
@@ -86,7 +91,6 @@ export default function CreateAccount() {
     setAddressError("");
   };
 
-  // ✅ Zip validation
   const handleZipChange = (value) => {
     setZip(value);
     if (!value) return setZipError("Please enter zip code");
@@ -95,15 +99,15 @@ export default function CreateAccount() {
     setZipError("");
   };
 
-  // ✅ Submit form
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccess("");
     setAgreeError("");
     setLgaError("");
+    setShowError(false); // reset old error popup
+    setShowSuccess(false); // reset old success popup
+    setPopupMessage("");
 
     let hasError = false;
-
     if (!name) {
       setNameError("Please enter your full name");
       hasError = true;
@@ -149,95 +153,136 @@ export default function CreateAccount() {
     )
       return;
 
-    // ✅ Passed all checks
-    setSuccess("Account created successfully!");
-    setTimeout(() => {
-      console.log({
-        name,
+    try {
+      setLoading(true);
+
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        fullName: name,
         phone,
         email,
         address,
         zip,
         lga,
+        createdAt: new Date(),
+        role: "user",
       });
-      window.location.href = "/dashboard";
-    }, 2000);
+
+      setLoading(false);
+      setPopupMessage("Account created successfully!");
+      setShowSuccess(true);
+
+      // auto-hide success and redirect
+      setTimeout(() => {
+        setShowSuccess(false);
+        window.location.href = "/dashboard";
+      }, 2000);
+    } catch (error) {
+      setLoading(false);
+
+      if (error.code === "auth/email-already-in-use") {
+        setPopupMessage("User already exists, please login instead.");
+      } else if (error.code === "auth/invalid-email") {
+        setPopupMessage("Invalid email address.");
+      } else if (error.code === "auth/weak-password") {
+        setPopupMessage("Password is too weak.");
+      } else {
+        setPopupMessage("Something went wrong, please try again.");
+      }
+
+      setShowError(true);
+
+      // auto-hide error after 4s
+      setTimeout(() => {
+        setShowError(false);
+      }, 3000);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      {/* Spinner + Popups */}
+      <Spinner show={loading} message="Creating your account..." />
+      <SuccessPopup show={showSuccess} message={popupMessage} />
+      <ErrorPopup show={showError} message={popupMessage} />
+
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-2xl border border-gray-300 bg-gray-50 p-6 rounded-lg"
+        className="w-full max-w-3xl border border-gray-300 bg-gray-50 p-7 rounded-lg text-gray-600"
         noValidate
       >
-        <h2 className="text-lg font-semibold mb-2">
-          Create your{" "}
-          <span className="text-[rgb(36,157,119)]">WastePickUp</span> Account
-        </h2>
-        <p className="text-sm text-gray-500 mb-4">Clean homes, Stay hygienic</p>
+        <div className="flex mb-4 flex-col  mx-auto max-w-45 items-center ">
+          <img src={Logo} alt="Wastepickup logo" className="max-w-35 h-auto" />
+          <p className="text-sm text-gray-400 mb-4 text-center">
+            Clean homes, Stay hygienic
+          </p>
+        </div>
 
-        {success && (
-          <div className="bg-green-100 text-green-700 text-sm p-2 rounded mb-3">
-            {success}
-          </div>
-        )}
-
-        {/* 2-column grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Name */}
           <div>
-            <label className="block text-sm mb-1">Full Name</label>
-            <input
-              type="text"
-              className="w-full border rounded p-2 outline-none"
-              value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="First Last"
-            />
-            {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
+            <label className="block text-sm mb-1 text-gray-500">Full Name</label>
+            <div className="flex items-center border rounded border-gray-400 px-2">
+              <Icon icon="hugeicons:user-03" width="24" height="24" className="text-gray-400" />
+              <input
+                type="text"
+                className="flex-1 p-2 outline-none border-gray-400"
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                placeholder="First Last"
+              />
+            </div>
+            {nameError && (
+              <p className="text-red-500 text-xs mt-1">{nameError}</p>
+            )}
           </div>
 
-          {/* Phone */}
           <div>
-            <label className="block text-sm mb-1">Phone Number</label>
-            <div className="flex items-center border rounded px-2">
-              <Icon icon="mdi:phone" className="text-gray-500" />
+            <label className="block text-sm mb-1 text-gray-500">Phone Number</label>
+            <div className="flex items-center border rounded border-gray-400 px-2">
+              <Icon icon="hugeicons:call-02" width="18" height="18" className="text-gray-400" />
               <input
                 type="tel"
-                className="flex-1 p-2 outline-none"
+                className="flex-1 p-2 outline-none border-gray-400"
                 value={phone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="e.g. 08012345678"
               />
             </div>
-            {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+            {phoneError && (
+              <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+            )}
           </div>
 
-          {/* Email */}
           <div>
-            <label className="block text-sm mb-1">Email</label>
-            <div className="flex items-center border rounded px-2">
-              <Icon icon="mdi:email-outline" className="text-gray-500" />
+            <label className="block text-sm mb-1 text-gray-500">Email</label>
+            <div className="flex items-center border rounded border-gray-400 px-2">
+              <Icon icon="hugeicons:mail-01" width="18" height="18" className="text-gray-400" />
               <input
                 type="email"
-                className="flex-1 p-2 outline-none"
+                className="flex-1 p-2 outline-none border-gray-400"
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
                 placeholder="Enter email"
               />
             </div>
-            {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
+            {emailError && (
+              <p className="text-red-500 text-xs mt-1">{emailError}</p>
+            )}
           </div>
 
-          {/* Password */}
           <div>
-            <label className="block text-sm mb-1">Password</label>
-            <div className="flex items-center border rounded px-2">
-              <Icon icon="mdi:lock-outline" className="text-gray-500" />
+            <label className="block text-sm mb-1 text-gray-500">Password</label>
+            <div className="flex items-center border border-gray-400 rounded px-2">
+              <Icon icon="hugeicons:square-lock-password" width="20" height="20" className="text-gray-400" />
               <input
                 type={showPassword ? "text" : "password"}
-                className="flex-1 p-2 outline-none"
+                className="flex-1 p-2 outline-none "
                 value={password}
                 onChange={(e) => handlePasswordChange(e.target.value)}
                 placeholder="Enter password"
@@ -245,7 +290,7 @@ export default function CreateAccount() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="ml-2 text-xs"
+                className="ml-2 text-xs text-gray-500 cursor"
               >
                 {showPassword ? "hide" : "show"}
               </button>
@@ -255,74 +300,86 @@ export default function CreateAccount() {
             )}
           </div>
 
-          {/* Address */}
           <div>
-            <label className="block text-sm mb-1">Address</label>
-            <input
-              type="text"
-              className="w-full border rounded p-2 outline-none"
-              value={address}
-              onChange={(e) => handleAddressChange(e.target.value)}
-              placeholder="Street, City"
-            />
+            <label className="block text-sm mb-1 text-gray-500">Address</label>
+            <div className="flex items-center border rounded border-gray-400 px-2">
+              <Icon icon="hugeicons:location-05" width="20" height="20" className="text-gray-400" />
+              <input
+                type="text"
+                className="flex-1 p-2 outline-none border-gray-400"
+                value={address}
+                onChange={(e) => handleAddressChange(e.target.value)}
+                placeholder="Street, City"
+              />
+            </div>
             {addressError && (
               <p className="text-red-500 text-xs mt-1">{addressError}</p>
             )}
           </div>
 
-          {/* LGA Dropdown */}
           <div>
-            <label className="block text-sm mb-1">LGA</label>
-            <select
-              className="w-full border rounded p-2 outline-none"
-              value={lga}
-              onChange={(e) => setLga(e.target.value)}
-            >
-              <option value="">Select LGA</option>
-              <option value="Gwale">Gwale</option>
-              <option value="Nassarawa">Nassarawa</option>
-              <option value="Tarauni">Tarauni</option>
-            </select>
-            {lgaError && <p className="text-red-500 text-xs mt-1">{lgaError}</p>}
+            <label className="block text-sm mb-1 text-gray-500">LGA</label>
+            <div className="flex items-center border rounded border-gray-400 px-2">
+              <Icon icon="hugeicons:location-01" width="18" height="18" className="text-gray-400" />
+              <select
+                className="flex-1 p-2 outline-none border-gray-400"
+                value={lga}
+                onChange={(e) => setLga(e.target.value)}
+              >
+                <option value="">Select LGA</option>
+                <option value="Gwale">Gwale</option>
+                <option value="Nassarawa">Nassarawa</option>
+                <option value="Tarauni">Tarauni</option>
+              </select>
+            </div>
+            {lgaError && (
+              <p className="text-red-500 text-xs mt-1">{lgaError}</p>
+            )}
           </div>
 
-          {/* Zip */}
           <div>
-            <label className="block text-sm mb-1">Zip Code</label>
-            <input
-              type="text"
-              className="w-full border rounded p-2 outline-none"
-              value={zip}
-              onChange={(e) => handleZipChange(e.target.value)}
-              placeholder="e.g. 700001"
-            />
-            {zipError && <p className="text-red-500 text-xs mt-1">{zipError}</p>}
+            <label className="block text-sm mb-1 text-gray-500">Zip Code</label>
+            <div className="flex items-center border rounded border-gray-400 px-2">
+              <Icon icon="hugeicons:location-01" width="18" height="18" className="text-gray-400" />
+              <input
+                type="text"
+                className="flex-1 p-2 outline-none border-gray-400"
+                value={zip}
+                onChange={(e) => handleZipChange(e.target.value)}
+                placeholder="e.g. 700001"
+              />
+            </div>
+            {zipError && (
+              <p className="text-red-500 text-xs mt-1">{zipError}</p>
+            )}
           </div>
         </div>
 
-        {/* Terms */}
-        <div className="mt-3 flex items-center">
+        <div className="mt-5 flex items-center">
           <input
             type="checkbox"
             id="agree"
-            className="w-4 h-4 accent-[rgb(36,157,119)] mr-2"
+            className="w-4 h-4 accent-[rgb(36,157,119)] mr-2 "
             checked={agree}
             onChange={() => setAgree(!agree)}
           />
-          <label htmlFor="agree" className="text-sm gap-1 flex flex-wrap">
-            I agree with the 
-            <Link to = "/TermsPrivacy" className="hover:underline">
-            Terms and Privacy
+          <label htmlFor="agree" className="text-sm gap-1  flex flex-wrap text-gray-500">
+            I agree with the
+            <Link to="/TermsPrivacy" className="hover:underline">
+              Terms and Privacy
             </Link>
           </label>
         </div>
-        {agreeError && <p className="text-red-500 text-xs mb-2">{agreeError}</p>}
-
+        {agreeError && (
+          <p className="text-red-500 text-xs mb-2">{agreeError}</p>
+        )}
         <button
           type="submit"
-          className="w-full bg-[rgb(36,157,119)] text-white py-2 rounded hover:opacity-90 mt-3"
+          disabled={loading}
+          className={`w-full py-2 rounded mt-3 text-white ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[rgb(36,157,119)] hover:opacity-90"
+            }`}
         >
-          Create Account
+          {loading ? "Processing..." : "Create Account"}
         </button>
 
         <p className="mt-3 text-sm text-center">
