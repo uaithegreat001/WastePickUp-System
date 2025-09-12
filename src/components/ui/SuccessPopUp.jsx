@@ -9,7 +9,7 @@ export default function SuccessPopup({ show, message }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50 ">
       <div
         className="
-          bg-gray-50 rounded-lg border border-gray-300 px-6 py-5 flex flex-col items-center 
+          bg-gray-50 rounded-lg px-6 py-5 flex flex-col items-center 
           w-11/12 max-w-sm sm:max-w-xs
           transform transition-all duration-500 ease-out
           animate-slideDown
