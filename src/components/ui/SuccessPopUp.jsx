@@ -6,7 +6,7 @@ export default function SuccessPopup({ show, message }) {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50 ">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div
         className="
           bg-gray-50 rounded-lg px-6 py-5 flex flex-col items-center 

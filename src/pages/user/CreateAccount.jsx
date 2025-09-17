@@ -4,12 +4,15 @@ import { Link } from "react-router-dom";
 import { auth, db } from "../../firebaseConfig.js";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import Disclaimer from "../../components/ui/Disclaimer.jsx";
 import Logo from "../../assets/Logo-Transparent.png";
 import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
 import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 
 export default function CreateAccount() {
+  // States
+  const [disclaimer, setDisclaimer] = useState(true);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
   const [phone, setPhone] = useState("");
@@ -27,12 +30,15 @@ export default function CreateAccount() {
   const [lgaError, setLgaError] = useState("");
   const [agree, setAgree] = useState(false);
   const [agreeError, setAgreeError] = useState("");
+
+  // Popup & spinner states
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
 
-  // Email validation
+ 
+  // Email regex
   const emailRegex = /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.com$/i;
 
   // Password checks
@@ -40,8 +46,8 @@ export default function CreateAccount() {
   const hasLowercase = /[a-z]/;
   const hasNumber = /[0-9]/;
   const hasSpecial = /[^A-Za-z0-9]/;
-
-  const handleNameChange = (value) => {
+  // Name validation
+  const handleNameError = (value) => {
     setName(value);
     if (!value.trim()) return setNameError("Please enter your full name");
     if (!/^[A-Za-z\s]+$/.test(value))
@@ -50,15 +56,15 @@ export default function CreateAccount() {
     if (parts.length < 2) return setNameError("Please enter full name");
     setNameError("");
   };
-
-  const handlePhoneChange = (value) => {
+  // Phone validation
+  const handlePhoneError = (value) => {
     setPhone(value);
     if (!/^0\d{10}$/.test(value))
       return setPhoneError("Phone number must start with 0 and be 11 digits");
     setPhoneError("");
   };
-
-  const handleEmailChange = (value) => {
+  // Email validation
+  const handleEmailError = (value) => {
     const clean = value.replace(/\s/g, "");
     setEmail(clean);
     if (!clean) return setEmailError("Please enter email");
@@ -66,8 +72,8 @@ export default function CreateAccount() {
       return setEmailError("Oops, this appears to be an invalid email");
     setEmailError("");
   };
-
-  const handlePasswordChange = (value) => {
+  // Password validation
+  const handlePasswordError = (value) => {
     const pass = value.replace(/\s/g, "");
     setPassword(pass);
     if (!pass) return setPasswordError("Please enter password");
@@ -82,29 +88,29 @@ export default function CreateAccount() {
       return setPasswordError("Must include special character");
     setPasswordError("");
   };
-
-  const handleAddressChange = (value) => {
+  // Address validation
+  const handleAddressError = (value) => {
     setAddress(value);
     if (!value.trim()) return setAddressError("Please enter address");
     if (!/^[A-Za-z0-9\s,.-]+$/.test(value))
       return setAddressError("Invalid characters in address");
     setAddressError("");
   };
-
-  const handleZipChange = (value) => {
+  // ZipCode validation
+  const handleZipError = (value) => {
     setZip(value);
     if (!value) return setZipError("Please enter zip code");
     if (!/^\d{5,6}$/.test(value))
       return setZipError("Zip code must be 5 or 6 digits");
     setZipError("");
   };
-
+  // Submit form function
   const handleSubmit = async (e) => {
     e.preventDefault();
     setAgreeError("");
     setLgaError("");
-    setShowError(false); // reset old error popup
-    setShowSuccess(false); // reset old success popup
+    setShowError(false);
+    setShowSuccess(false);
     setPopupMessage("");
 
     let hasError = false;
@@ -178,7 +184,7 @@ export default function CreateAccount() {
       setPopupMessage("Account created successfully!");
       setShowSuccess(true);
 
-      // auto-hide success and redirect
+      // Hide successs and redirect
       setTimeout(() => {
         setShowSuccess(false);
         window.location.href = "/dashboard";
@@ -187,18 +193,20 @@ export default function CreateAccount() {
       setLoading(false);
 
       if (error.code === "auth/email-already-in-use") {
-        setPopupMessage("User already exists, please login instead.");
+        setPopupMessage("Oops, User already exists please try login");
       } else if (error.code === "auth/invalid-email") {
-        setPopupMessage("Invalid email address.");
+        setPopupMessage("Oops, invalid email address");
       } else if (error.code === "auth/weak-password") {
-        setPopupMessage("Password is too weak.");
+        setPopupMessage("Oops, password is too weak");
+      } else if (error.code === "auth/network-request-failed") {
+        setPopupMessage("Oops, network error please try again");
       } else {
-        setPopupMessage("Something went wrong, please try again.");
+        setPopupMessage("Oops, something went wrong please try again.");
       }
 
       setShowError(true);
 
-      // auto-hide error after 4s
+      // Hide error
       setTimeout(() => {
         setShowError(false);
       }, 3000);
@@ -206,7 +214,13 @@ export default function CreateAccount() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center px-3">
+      <Disclaimer
+        show={disclaimer}
+        title="Disclaimer:"
+        message="For accurate scheduling and timely delivery of services, please provide your exact personal information when creating your account!"
+        onClose={() => setDisclaimer(false)}
+      />
       {/* Spinner + Popups */}
       <Spinner show={loading} message="Creating your account..." />
       <SuccessPopup show={showSuccess} message={popupMessage} />
@@ -225,6 +239,7 @@ export default function CreateAccount() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Name */}
           <div>
             <label className="block text-sm mb-1 text-gray-500">Full Name</label>
             <div className="flex items-center border rounded border-gray-400 px-2">
@@ -233,7 +248,7 @@ export default function CreateAccount() {
                 type="text"
                 className="flex-1 p-2 outline-none border-gray-400"
                 value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
+                onChange={(e) => handleNameError(e.target.value)}
                 placeholder="First Last"
               />
             </div>
@@ -241,7 +256,7 @@ export default function CreateAccount() {
               <p className="text-red-500 text-xs mt-1">{nameError}</p>
             )}
           </div>
-
+          {/* Phone number */}
           <div>
             <label className="block text-sm mb-1 text-gray-500">Phone Number</label>
             <div className="flex items-center border rounded border-gray-400 px-2">
@@ -250,7 +265,7 @@ export default function CreateAccount() {
                 type="tel"
                 className="flex-1 p-2 outline-none border-gray-400"
                 value={phone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
+                onChange={(e) => handlePhoneError(e.target.value)}
                 placeholder="e.g. 08012345678"
               />
             </div>
@@ -258,7 +273,7 @@ export default function CreateAccount() {
               <p className="text-red-500 text-xs mt-1">{phoneError}</p>
             )}
           </div>
-
+          {/* Email */}
           <div>
             <label className="block text-sm mb-1 text-gray-500">Email</label>
             <div className="flex items-center border rounded border-gray-400 px-2">
@@ -267,7 +282,7 @@ export default function CreateAccount() {
                 type="email"
                 className="flex-1 p-2 outline-none border-gray-400"
                 value={email}
-                onChange={(e) => handleEmailChange(e.target.value)}
+                onChange={(e) => handleEmailError(e.target.value)}
                 placeholder="Enter email"
               />
             </div>
@@ -275,7 +290,7 @@ export default function CreateAccount() {
               <p className="text-red-500 text-xs mt-1">{emailError}</p>
             )}
           </div>
-
+          {/* Password */}
           <div>
             <label className="block text-sm mb-1 text-gray-500">Password</label>
             <div className="flex items-center border border-gray-400 rounded px-2">
@@ -284,22 +299,22 @@ export default function CreateAccount() {
                 type={showPassword ? "text" : "password"}
                 className="flex-1 p-2 outline-none "
                 value={password}
-                onChange={(e) => handlePasswordChange(e.target.value)}
+                onChange={(e) => handlePasswordError(e.target.value)}
                 placeholder="Enter password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="ml-2 text-xs text-gray-500 cursor"
+                className="ml-2 text-xs text-gray-500 cursor-pointer hover:underline"
               >
-                {showPassword ? "hide" : "show"}
+                {showPassword ? "Hide" : "Show"}
               </button>
             </div>
             {passwordError && (
               <p className="text-red-500 text-xs mt-1">{passwordError}</p>
             )}
           </div>
-
+          {/* Address */}
           <div>
             <label className="block text-sm mb-1 text-gray-500">Address</label>
             <div className="flex items-center border rounded border-gray-400 px-2">
@@ -308,7 +323,7 @@ export default function CreateAccount() {
                 type="text"
                 className="flex-1 p-2 outline-none border-gray-400"
                 value={address}
-                onChange={(e) => handleAddressChange(e.target.value)}
+                onChange={(e) => handleAddressError(e.target.value)}
                 placeholder="Street, City"
               />
             </div>
@@ -316,7 +331,7 @@ export default function CreateAccount() {
               <p className="text-red-500 text-xs mt-1">{addressError}</p>
             )}
           </div>
-
+          {/* LGA */}
           <div>
             <label className="block text-sm mb-1 text-gray-500">LGA</label>
             <div className="flex items-center border rounded border-gray-400 px-2">
@@ -336,7 +351,7 @@ export default function CreateAccount() {
               <p className="text-red-500 text-xs mt-1">{lgaError}</p>
             )}
           </div>
-
+          {/* ZipCode */}
           <div>
             <label className="block text-sm mb-1 text-gray-500">Zip Code</label>
             <div className="flex items-center border rounded border-gray-400 px-2">
@@ -345,7 +360,7 @@ export default function CreateAccount() {
                 type="text"
                 className="flex-1 p-2 outline-none border-gray-400"
                 value={zip}
-                onChange={(e) => handleZipChange(e.target.value)}
+                onChange={(e) => handleZipError(e.target.value)}
                 placeholder="e.g. 700001"
               />
             </div>
@@ -354,12 +369,12 @@ export default function CreateAccount() {
             )}
           </div>
         </div>
-
+        {/* CheckBox*/}
         <div className="mt-5 flex items-center">
           <input
             type="checkbox"
             id="agree"
-            className="w-4 h-4 accent-[rgb(36,157,119)] mr-2 "
+            className="w-4 h-4 cursor-pointer accent-[rgb(36,157,119)] mr-2 "
             checked={agree}
             onChange={() => setAgree(!agree)}
           />
@@ -376,12 +391,12 @@ export default function CreateAccount() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-2 rounded mt-3 text-white ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[rgb(36,157,119)] hover:opacity-90"
+          className={`w-full py-2 rounded mt-3 cursor-pointer text-white ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[rgb(36,157,119)] hover:opacity-90"
             }`}
         >
           {loading ? "Processing..." : "Create Account"}
         </button>
-
+        {/* Login to account link */}
         <p className="mt-3 text-sm text-center">
           Already have an account?{" "}
           <Link to="/login" className="text-[rgb(36,157,119)]">

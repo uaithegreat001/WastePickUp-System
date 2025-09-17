@@ -28,7 +28,7 @@ export default function AppRoutes() {
         <Route path="/dashboard" element={<UserDashboard />} />
 
         {/* Admin Dashboard */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );

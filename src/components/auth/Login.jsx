@@ -64,7 +64,7 @@ export default function Login() {
     setPasswordError("");
   };
 
-  // Submit form
+  // Submit form function
   const handleSubmit = async (e) => {
     e.preventDefault();
     setAgreeError("");
@@ -90,11 +90,11 @@ export default function Login() {
     try {
       setLoading(true);
 
-      // ✅ Sign in with Firebase
+      // Sign in with Firebase
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // ✅ Check role in Firestore
+      // Check role in Firestore
       const userDoc = await getDoc(doc(db, "users", user.uid));
       let role = "user";
       if (userDoc.exists()) {
@@ -105,7 +105,7 @@ export default function Login() {
       setPopupMessage("Login successful!");
       setShowSuccess(true);
 
-      // ✅ Redirect based on role
+      // Directing user base on role
       setTimeout(() => {
         if (role === "admin") {
           window.location.href = "/admin-dashboard";
@@ -116,18 +116,21 @@ export default function Login() {
     } catch (error) {
       setLoading(false);
       console.error("Login error:", error);
+      console.log("Firebase error code:", error.code);
 
       if (error.code === "auth/user-not-found") {
-        setPopupMessage("Account not found. Please create one.");
+        setPopupMessage("Account not found please create one");
       } else if (error.code === "auth/wrong-password") {
-        setPopupMessage("Incorrect password. Please try again.");
+        setPopupMessage("Oops, incorrect password please try again");
       } else if (error.code === "auth/too-many-requests") {
-        setPopupMessage("Too many attempts. Try again later.");
+        setPopupMessage("Too many attempt try again later");
+      } else if (error.code === "auth/network-request-failed") {
+        setPopupMessage("Oops, network error please try again");
       } else {
-        setPopupMessage("Something went wrong. Please try again.");
+        setPopupMessage("Oops, something went wrong please try again");
       }
       setShowError(true);
-      // auto-hide error after 4s
+      // Hide error
       setTimeout(() => {
         setShowError(false);
       }, 3000);
@@ -135,8 +138,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center px-4">
-      {/* Spinner */}
+    <div className="min-h-screen w-full flex items-center justify-center px-3">
       <Spinner show={loading} message="Logging you in..." />
       <SuccessPopup show={showSuccess} message={popupMessage} />
       <ErrorPopup show={showError} message={popupMessage} />
@@ -184,7 +186,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="ml-2 text-xs text-[rgb(36,157,119)] hover:underline"
+              className="ml-2 text-xs cursor-pointer text-gray-500 hover:underline"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -198,12 +200,12 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Terms */}
+        {/* Checkbox */}
         <div className="mb-4 flex items-center text-gray-500">
           <input
             type="checkbox"
             id="agree"
-            className="w-4 h-4 accent-[rgb(36,157,119)] mr-2"
+            className=" cursor-pointer w-4 h-4 accent-[rgb(36,157,119)] mr-2"
             checked={agree}
             onChange={() => setAgree(!agree)}
           />
@@ -219,12 +221,12 @@ export default function Login() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-[rgb(36,157,119)] text-white py-2 rounded hover:opacity-90 transition"
+          className="w-full bg-[rgb(36,157,119)] cursor-pointer text-white py-2 rounded hover:opacity-90 transition"
         >
           Login
         </button>
 
-        {/* Signup link */}
+        {/* Creating account link */}
         <p className="mt-4 text-sm text-center">
           Don’t have an account?{" "}
           <Link to="/CreateAccount" className="text-[rgb(36,157,119)] hover:underline">

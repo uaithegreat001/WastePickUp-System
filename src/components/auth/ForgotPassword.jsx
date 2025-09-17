@@ -1,15 +1,24 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../firebaseConfig.js";
+import Disclaimer from "../../components/ui/Disclaimer.jsx";
 import Logo from "../../assets/Logo-Transparent.png";
+import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
+import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
+import Spinner from "../../components/ui/Spinner.jsx";
 
 export default function ForgotPassword() {
   // States
+    const [disclaimer, setDisclaimer] = useState(true);
+  
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Email pattern validation (same as Login/CreateAccount)
   const emailRegex = /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.com$/i;
@@ -25,52 +34,83 @@ export default function ForgotPassword() {
   };
 
   // Submit form
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccess("");
+    setShowSuccess(false);
+    setShowError(false);
+    setPopupMessage("");
+
     let hasError = false;
     if (!email) {
       setEmailError("Please enter email");
       hasError = true;
     }
     if (emailError || hasError) return;
-    // Simulate sending reset link
-    setSuccess("Password reset link sent to your email!");
-    setShowPopup(true);
-    setTimeout(() => setShowPopup(false), 3000);
+
+    try {
+      setLoading(true);
+      await sendPasswordResetEmail(auth, email, {
+         // Redirect back to your app after reset
+      url: window.location.origin + "/login",
+      handleCodeInApp: false // ✅ Let Firebase use its default reset page
+
+      });
+     
+      setLoading(false);
+
+      setPopupMessage("Password reset link sent to your email!");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 4000);
+    } catch (error) {
+      setLoading(false);
+      if (error.code === "auth/user-not-found") {
+        setPopupMessage("Account not found please create one");
+      } else {
+        setPopupMessage("Oops, network error please try again");
+      }
+      setShowError(true);
+      setTimeout(() => setShowError(false), 4000);
+    }
   };
 
-  // Smooth popup animation
-  // Add custom styles for modal overlay and popup
   return (
-  <div className="min-h-screen w-full flex items-center justify-center px-2 sm:px-4  relative">
-      {/* Popup Modal */}
-      {showPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-gray-50 rounded-xl shadow-2xl px-4 py-4 sm:px-8 sm:py-6 flex flex-col items-center w-11/12 max-w-md">
-            <Icon icon="mdi:check-circle" width="40" height="40" className="text-green-500 mb-2" />
-            <h3 className="text-base sm:text-lg font-semibold text-green-700 mb-2">Success!</h3>
-            <p className="text-gray-600 text-center mb-2 text-sm sm:text-base">{success}</p>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-2 sm:px-4 relative">
+      <Disclaimer
+              show={disclaimer}
+              title ="Note:"
+              message="Please check your spam folder if email send to you not found!"
+              onClose={() => setDisclaimer(false)}
+              className="!max-w-lg sm:!max-w-md md:!max-w-lg " />
+      {/* Spinner */}
+      <Spinner show={loading} message="Sending reset link..." />
+
+      {/* Reusable Popups */}
+      <SuccessPopup show={showSuccess} message={popupMessage} />
+      <ErrorPopup show={showError} message={popupMessage} />
 
       {/* Main Form Card */}
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg sm:max-w-md md:max-w-lg border border-gray-300 bg-gray-50 p-4 sm:p-8 rounded-lg text-gray-600  transition-all duration-700"
+        className="w-full max-w-lg sm:max-w-md md:max-w-lg border border-gray-300 bg-gray-50 p-4 sm:p-8 rounded-lg text-gray-600 transition-all duration-700"
         noValidate
       >
-        <div className="flex mb-4 flex-col mx-auto items-center ">
+        <div className="flex mb-4 flex-col mx-auto items-center">
           <img src={Logo} alt="Wastepickup logo" className="w-24 sm:w-32 md:w-36 h-auto" />
-          <p className="text-xs sm:text-sm text-gray-400 mb-4 text-center">Clean homes, Stay hygienic</p>
+          <p className="text-xs sm:text-sm text-gray-400 mb-4 text-center">
+            Clean homes, Stay hygienic
+          </p>
         </div>
 
         {/* Email */}
         <div className="mb-4">
           <label className="block text-xs sm:text-sm mb-1 text-gray-500">Email</label>
           <div className="flex items-center border rounded px-2 border-gray-400">
-            <Icon icon="hugeicons:mail-01" width="16" height="16" className="text-gray-400" />
+            <Icon
+              icon="hugeicons:mail-01"
+              width="16"
+              height="16"
+              className="text-gray-400"
+            />
             <input
               type="email"
               className="flex-1 p-2 outline-none text-sm sm:text-sm"
@@ -85,7 +125,7 @@ export default function ForgotPassword() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-[rgb(36,157,119)] text-white py-2 rounded hover:opacity-90 transition text-xs sm:text-sm"
+          className="w-full bg-[rgb(36,157,119)] cursor-pointer text-white py-2 rounded hover:opacity-90 transition text-xs sm:text-sm"
         >
           Send Reset Link
         </button>
@@ -98,8 +138,6 @@ export default function ForgotPassword() {
           </Link>
         </p>
       </form>
-
-      {/* No custom animations */}
     </div>
   );
 }
