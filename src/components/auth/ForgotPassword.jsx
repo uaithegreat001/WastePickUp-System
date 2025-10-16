@@ -80,7 +80,7 @@ export default function ForgotPassword() {
               title ="Note:"
               message="Please check your spam folder if email send to you not found!"
               onClose={() => setDisclaimer(false)}
-              className="!max-w-lg sm:!max-w-md md:!max-w-lg " />
+              className="!max-w-lg sm:!max-w-md md:!max-w-lg bg-blue-100 " />
       {/* Spinner */}
       <Spinner show={loading} message="Sending reset link..." />
 

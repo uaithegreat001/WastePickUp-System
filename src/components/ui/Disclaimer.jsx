@@ -7,16 +7,16 @@ export default function Disclaimer({ show, title, message, onClose, className })
   if (!show) return null;
 
   return (
-    <div className={`w-full max-w-3xl shadow-sm justify-center items-center mb-4 mt-4 p-2 bg-blue-100  rounded-lg ${className || ''}`}>
+    <div className={`w-full max-w-3xl shadow-sm justify-center items-center mb-4 mt-4 p-2 border border-gray-300  rounded-lg ${className || ''}`}>
       <div className="flex justify-between items-start gap-4">
         <div className="flex gap-2 text-gray-600 text-sm">
           <Icon 
             icon="hugeicons:information-circle"
             width="20"
             height="20"
-            className="text-blue-500 mt-0.4 flex-shrink-0" 
+            className="text-gray-400 mt-0.4 flex-shrink-0" 
           />
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-500 text-sm">
             <strong className="font-semibold">{title}</strong> {message || ""}
             
           </p>

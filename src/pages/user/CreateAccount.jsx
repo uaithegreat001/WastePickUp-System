@@ -220,6 +220,7 @@ export default function CreateAccount() {
         title="Disclaimer:"
         message="For accurate scheduling and timely delivery of services, please provide your exact personal information when creating your account!"
         onClose={() => setDisclaimer(false)}
+        className={" bg-blue-100 "}
       />
       {/* Spinner + Popups */}
       <Spinner show={loading} message="Creating your account..." />
