@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebaseConfig.js";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -11,6 +11,8 @@ import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 
 export default function CreateAccount() {
+  const navigate = useNavigate();
+  
   // States
   const [disclaimer, setDisclaimer] = useState(true);
   const [name, setName] = useState("");
@@ -184,10 +186,10 @@ export default function CreateAccount() {
       setPopupMessage("Account created successfully!");
       setShowSuccess(true);
 
-      // Hide successs and redirect
+      // Hide success and redirect
       setTimeout(() => {
         setShowSuccess(false);
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
       }, 2000);
     } catch (error) {
       setLoading(false);

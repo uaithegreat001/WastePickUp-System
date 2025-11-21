@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebaseConfig.js";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -10,6 +10,8 @@ import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
 import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
 
 export default function Login() {
+  const navigate = useNavigate();
+  
   // States
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -108,9 +110,9 @@ export default function Login() {
       // Directing user base on role
       setTimeout(() => {
         if (role === "admin") {
-          window.location.href = "/admin-dashboard";
+          navigate("/admin-dashboard");
         } else {
-          window.location.href = "/dashboard";
+          navigate("/dashboard");
         }
       }, 2000);
     } catch (error) {
