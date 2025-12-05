@@ -1,0 +1,185 @@
+import React from 'react';
+import { Icon } from '@iconify/react';
+import StatusBadge from '../admin/StatusBadge';
+
+// Displays pickups, orders, or messages in a table format
+export default function UserDataTable({ type, data, onViewDetails }) {
+    
+    // format timestamp to a short date string
+    const formatDate = (timestamp) => {
+        if (!timestamp) return 'N/A';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
+    // show empty state if no data
+    if (!data || data.length === 0) {
+        return <EmptyState type={type} />;
+    }
+
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+                <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            {type === 'pickups' && <PickupHeaders />}
+                            {type === 'orders' && <OrderHeaders />}
+                            {type === 'messages' && <MessageHeaders />}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {data.map((item) => (
+                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                {type === 'pickups' && <PickupRow item={item} formatDate={formatDate} />}
+                                {type === 'orders' && <OrderRow item={item} formatDate={formatDate} />}
+                                {type === 'messages' && <MessageRow item={item} formatDate={formatDate} />}
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                                    <button
+                                        onClick={() => onViewDetails(item)}
+                                        className="text-primary hover:text-primary-hover font-medium"
+                                    >
+                                        View Details
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
+// empty state when there's nothing to show
+function EmptyState({ type }) {
+    const icons = {
+        pickups: 'hugeicons:clean',
+        orders: 'hugeicons:waste',
+        messages: 'hugeicons:chat-feedback-01'
+    };
+    const texts = {
+        pickups: 'No pickup requests yet',
+        orders: 'No bin orders yet',
+        messages: 'No messages yet'
+    };
+
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+            <Icon icon={icons[type]} className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">{texts[type]}</p>
+        </div>
+    );
+}
+
+// table headers for each type
+function PickupHeaders() {
+    return (
+        <>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+        </>
+    );
+}
+
+function OrderHeaders() {
+    return (
+        <>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bin Size</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+        </>
+    );
+}
+
+function MessageHeaders() {
+    return (
+        <>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+        </>
+    );
+}
+
+// row content for each type
+function PickupRow({ item, formatDate }) {
+    return (
+        <>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {formatDate(item.createdAt)}
+            </td>
+            <td className="px-6 py-4 text-sm text-gray-900">
+                {item.pickupAddress || 'N/A'}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                ₦{item.amount?.toLocaleString() || '0'}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+                <StatusBadge status={item.status} size="small" />
+            </td>
+        </>
+    );
+}
+
+function OrderRow({ item, formatDate }) {
+    return (
+        <>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {formatDate(item.createdAt)}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {item.binSize || 'N/A'}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {item.quantity || 0}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                ₦{(item.amount || item.totalAmount || 0).toLocaleString()}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+                <StatusBadge status={item.status} size="small" />
+            </td>
+        </>
+    );
+}
+
+function MessageRow({ item, formatDate }) {
+    const getStatusColor = (status) => {
+        const colors = {
+            'open': 'bg-blue-100 text-blue-700',
+            'in_progress': 'bg-yellow-100 text-yellow-700',
+            'resolved': 'bg-green-100 text-green-700',
+            'closed': 'bg-gray-100 text-gray-700'
+        };
+        return colors[status] || 'bg-gray-100 text-gray-700';
+    };
+
+    return (
+        <>
+            <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm font-medium text-gray-900">{item.subject}</div>
+                <div className="text-xs text-gray-500 truncate max-w-xs">{item.message}</div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+                <span className="text-sm text-gray-600">{formatDate(item.createdAt)}</span>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                    {item.status?.replace('_', ' ') || 'unknown'}
+                </span>
+            </td>
+        </>
+    );
+}
