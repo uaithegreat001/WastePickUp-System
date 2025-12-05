@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebaseConfig.js";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { SERVICE_AREAS } from "../../constants/serviceAreas.js";
 import Disclaimer from "../../components/ui/Disclaimer.jsx";
 import Logo from "../../assets/Logo-Transparent.png";
 import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
@@ -26,10 +27,8 @@ export default function CreateAccount() {
   const [showPassword, setShowPassword] = useState(false);
   const [address, setAddress] = useState("");
   const [addressError, setAddressError] = useState("");
-  const [zip, setZip] = useState("");
-  const [zipError, setZipError] = useState("");
-  const [lga, setLga] = useState("");
-  const [lgaError, setLgaError] = useState("");
+  const [serviceArea, setServiceArea] = useState("");
+  const [serviceAreaError, setServiceAreaError] = useState("");
   const [agree, setAgree] = useState(false);
   const [agreeError, setAgreeError] = useState("");
 
@@ -98,19 +97,10 @@ export default function CreateAccount() {
       return setAddressError("Invalid characters in address");
     setAddressError("");
   };
-  // ZipCode validation
-  const handleZipError = (value) => {
-    setZip(value);
-    if (!value) return setZipError("Please enter zip code");
-    if (!/^\d{5,6}$/.test(value))
-      return setZipError("Zip code must be 5 or 6 digits");
-    setZipError("");
-  };
-  // Submit form function
   const handleSubmit = async (e) => {
     e.preventDefault();
     setAgreeError("");
-    setLgaError("");
+    setServiceAreaError("");
     setShowError(false);
     setShowSuccess(false);
     setPopupMessage("");
@@ -136,12 +126,8 @@ export default function CreateAccount() {
       setAddressError("Please enter address");
       hasError = true;
     }
-    if (!zip) {
-      setZipError("Please enter zip code");
-      hasError = true;
-    }
-    if (!lga) {
-      setLgaError("Please select LGA");
+    if (!serviceArea) {
+      setServiceAreaError("Please select service area");
       hasError = true;
     }
     if (!agree) {
@@ -155,8 +141,7 @@ export default function CreateAccount() {
       emailError ||
       passwordError ||
       addressError ||
-      zipError ||
-      lgaError ||
+      serviceAreaError ||
       hasError
     )
       return;
@@ -171,13 +156,16 @@ export default function CreateAccount() {
       );
       const user = userCredential.user;
 
+      // Extract zipcode and lga from selected service area
+      const selectedArea = SERVICE_AREAS.find(area => area.zipcode === serviceArea);
+
       await setDoc(doc(db, "users", user.uid), {
         fullName: name,
         phone,
         email,
         address,
-        zip,
-        lga,
+        zipcode: selectedArea.zipcode,
+        lga: selectedArea.lga,
         createdAt: new Date(),
         role: "user",
       });
@@ -334,41 +322,26 @@ export default function CreateAccount() {
               <p className="text-red-500 text-xs mt-1">{addressError}</p>
             )}
           </div>
-          {/* LGA */}
+          {/* Service Area */}
           <div>
-            <label className="block text-sm mb-1 text-gray-500">LGA</label>
+            <label className="block text-sm mb-1 text-gray-500">Select Service Area</label>
             <div className="flex items-center border rounded border-gray-400 px-2">
               <Icon icon="hugeicons:location-01" width="18" height="18" className="text-gray-400" />
               <select
                 className="flex-1 p-2 outline-none border-gray-400"
-                value={lga}
-                onChange={(e) => setLga(e.target.value)}
+                value={serviceArea}
+                onChange={(e) => setServiceArea(e.target.value)}
               >
-                <option value="">Select LGA</option>
-                <option value="Gwale">Gwale</option>
-                <option value="Nassarawa">Nassarawa</option>
-                <option value="Tarauni">Tarauni</option>
+                <option value="">Select Service Area</option>
+                {SERVICE_AREAS.map((area) => (
+                  <option key={area.zipcode} value={area.zipcode}>
+                    {area.label}
+                  </option>
+                ))}
               </select>
             </div>
-            {lgaError && (
-              <p className="text-red-500 text-xs mt-1">{lgaError}</p>
-            )}
-          </div>
-          {/* ZipCode */}
-          <div>
-            <label className="block text-sm mb-1 text-gray-500">Zip Code</label>
-            <div className="flex items-center border rounded border-gray-400 px-2">
-              <Icon icon="hugeicons:location-01" width="18" height="18" className="text-gray-400" />
-              <input
-                type="text"
-                className="flex-1 p-2 outline-none border-gray-400"
-                value={zip}
-                onChange={(e) => handleZipError(e.target.value)}
-                placeholder="e.g. 700001"
-              />
-            </div>
-            {zipError && (
-              <p className="text-red-500 text-xs mt-1">{zipError}</p>
+            {serviceAreaError && (
+              <p className="text-red-500 text-xs mt-1">{serviceAreaError}</p>
             )}
           </div>
         </div>
