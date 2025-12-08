@@ -1,34 +1,56 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "../components/auth/Login";
-import ForgotPassword from "../components/auth/ForgotPassword";
+import Login from "../pages/auth/Login";
+import ForgotPassword from "../pages/auth/ForgotPassword";
 import CreateAccount from "../pages/user/CreateAccount";
-import TermsPrivacy from "../pages/TermsPrivacy";
+import TermsPrivacy from "../components/common/TermsPrivacy";
 
-// Dashboards
+// User pages
 import UserDashboard from "../pages/user/UserDashboard";
+import OrderBin from "../pages/user/OrderBin";
+import RequestPickup from "../pages/user/RequestPickup";
+import UserProfile from "../pages/user/UserProfile";
+import UserMessage from "../pages/user/UserMessage";
+
+// Admin pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import Users from "../pages/admin/Users";
+import PickupRequests from "../pages/admin/PickupRequests";
+import BinOrders from "../pages/admin/BinOrders";
+import Payments from "../pages/admin/Payments";
+import UsersMessages from "../pages/admin/UsersMessages";
+import AdminProfile from "../pages/admin/AdminProfile";
+import Settings from "../pages/admin/Settings";
 
 export default function AppRoutes() {
   return (
     <Router>
       <Routes>
-        {/* Default route → show user login */}
+        {/* Auth */}
         <Route path="/" element={<Login role="user" />} />
         <Route path="/login" element={<Login role="user" />} />
         <Route path="/forgotpassword" element={<ForgotPassword />} />
-
-        {/* Admin login */}
         <Route path="/admin/login" element={<Login role="admin" />} />
-
-        {/* Create Account */}
         <Route path="/createaccount" element={<CreateAccount />} />
         <Route path="/termsprivacy" element={<TermsPrivacy />} />
 
-        {/* User Dashboard */}
+        {/* User */}
         <Route path="/dashboard" element={<UserDashboard />} />
+        <Route path="/user/dashboard" element={<UserDashboard />} />
+        <Route path="/user/request-pickup" element={<RequestPickup />} />
+        <Route path="/user/order-bin" element={<OrderBin />} />
+        <Route path="/user/profile" element={<UserProfile />} />
+        <Route path="/user/message" element={<UserMessage />} />
 
-        {/* Admin Dashboard */}
+        {/* Admin */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<Users />} />
+        <Route path="/admin/pickup-requests" element={<PickupRequests />} />
+        <Route path="/admin/bin-orders" element={<BinOrders />} />
+        <Route path="/admin/payments" element={<Payments />} />
+        <Route path="/admin/support" element={<UsersMessages />} />
+        <Route path="/admin/profile" element={<AdminProfile />} />
+        <Route path="/admin/settings" element={<Settings />} />
       </Routes>
     </Router>
   );

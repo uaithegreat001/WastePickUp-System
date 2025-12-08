@@ -1,21 +1,20 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth, db } from "../../firebaseConfig.js";
+import { auth, db } from "../../lib/firebase.js";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { SERVICE_AREAS } from "../../constants/serviceAreas.js";
-import Disclaimer from "../../components/ui/Disclaimer.jsx";
+import { SERVICE_AREAS } from "../../lib/constants.js";
 import Logo from "../../assets/Logo-Transparent.png";
-import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
-import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
-import Spinner from "../../components/ui/Spinner.jsx";
+import SuccessBox from "../../components/common/SuccessBox";
+import ErrorBox from "../../components/common/ErrorBox";
+import LoadingBox from "../../components/common/LoadingBox";
+import { FormInput, FormSelect } from "../../components/common/FormInput";
 
 export default function CreateAccount() {
   const navigate = useNavigate();
   
   // States
-  const [disclaimer, setDisclaimer] = useState(true);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
   const [phone, setPhone] = useState("");
@@ -205,17 +204,9 @@ export default function CreateAccount() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-3">
-      <Disclaimer
-        show={disclaimer}
-        title="Disclaimer:"
-        message="For accurate scheduling and timely delivery of services, please provide your exact personal information when creating your account!"
-        onClose={() => setDisclaimer(false)}
-        className={" bg-blue-100 "}
-      />
-      {/* Spinner + Popups */}
-      <Spinner show={loading} message="Creating your account..." />
-      <SuccessPopup show={showSuccess} message={popupMessage} />
-      <ErrorPopup show={showError} message={popupMessage} />
+      <LoadingBox show={loading} message="Creating your account..." />
+      <SuccessBox show={showSuccess} message={popupMessage} onClose={() => setShowSuccess(false)} />
+      <ErrorBox show={showError} message={popupMessage} onClose={() => setShowError(false)} />
 
       <form
         onSubmit={handleSubmit}
@@ -232,117 +223,81 @@ export default function CreateAccount() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Name */}
           <div>
-            <label className="block text-sm mb-1 text-gray-500">Full Name</label>
-            <div className="flex items-center border rounded border-gray-400 px-2">
-              <Icon icon="hugeicons:user-03" width="24" height="24" className="text-gray-400" />
-              <input
-                type="text"
-                className="flex-1 p-2 outline-none border-gray-400"
-                value={name}
-                onChange={(e) => handleNameError(e.target.value)}
-                placeholder="First Last"
-              />
-            </div>
-            {nameError && (
-              <p className="text-red-500 text-xs mt-1">{nameError}</p>
-            )}
+            <FormInput
+              label="Full Name"
+              icon="hugeicons:user-03"
+              value={name}
+              onChange={(e) => handleNameError(e.target.value)}
+              placeholder="First Last"
+              error={nameError}
+            />
           </div>
           {/* Phone number */}
           <div>
-            <label className="block text-sm mb-1 text-gray-500">Phone Number</label>
-            <div className="flex items-center border rounded border-gray-400 px-2">
-              <Icon icon="hugeicons:call-02" width="18" height="18" className="text-gray-400" />
-              <input
-                type="tel"
-                className="flex-1 p-2 outline-none border-gray-400"
-                value={phone}
-                onChange={(e) => handlePhoneError(e.target.value)}
-                placeholder="e.g. 08012345678"
-              />
-            </div>
-            {phoneError && (
-              <p className="text-red-500 text-xs mt-1">{phoneError}</p>
-            )}
+            <FormInput
+              label="Phone Number"
+              icon="hugeicons:call-02"
+              type="tel"
+              value={phone}
+              onChange={(e) => handlePhoneError(e.target.value)}
+              placeholder="e.g. 08012345678"
+              error={phoneError}
+            />
           </div>
           {/* Email */}
           <div>
-            <label className="block text-sm mb-1 text-gray-500">Email</label>
-            <div className="flex items-center border rounded border-gray-400 px-2">
-              <Icon icon="hugeicons:mail-01" width="18" height="18" className="text-gray-400" />
-              <input
-                type="email"
-                className="flex-1 p-2 outline-none border-gray-400"
-                value={email}
-                onChange={(e) => handleEmailError(e.target.value)}
-                placeholder="Enter email"
-              />
-            </div>
-            {emailError && (
-              <p className="text-red-500 text-xs mt-1">{emailError}</p>
-            )}
+            <FormInput
+              label="Email"
+              icon="hugeicons:mail-01"
+              type="email"
+              value={email}
+              onChange={(e) => handleEmailError(e.target.value)}
+              placeholder="Enter email"
+              error={emailError}
+            />
           </div>
           {/* Password */}
           <div>
-            <label className="block text-sm mb-1 text-gray-500">Password</label>
-            <div className="flex items-center border border-gray-400 rounded px-2">
-              <Icon icon="hugeicons:square-lock-password" width="20" height="20" className="text-gray-400" />
-              <input
-                type={showPassword ? "text" : "password"}
-                className="flex-1 p-2 outline-none "
-                value={password}
-                onChange={(e) => handlePasswordError(e.target.value)}
-                placeholder="Enter password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="ml-2 text-xs text-gray-500 cursor-pointer hover:underline"
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-            {passwordError && (
-              <p className="text-red-500 text-xs mt-1">{passwordError}</p>
-            )}
+            <FormInput
+              label="Password"
+              icon="hugeicons:square-lock-password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => handlePasswordError(e.target.value)}
+              placeholder="Enter password"
+              error={passwordError}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-xs text-gray-500 cursor-pointer hover:underline"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              }
+            />
           </div>
           {/* Address */}
           <div>
-            <label className="block text-sm mb-1 text-gray-500">Address</label>
-            <div className="flex items-center border rounded border-gray-400 px-2">
-              <Icon icon="hugeicons:location-05" width="20" height="20" className="text-gray-400" />
-              <input
-                type="text"
-                className="flex-1 p-2 outline-none border-gray-400"
-                value={address}
-                onChange={(e) => handleAddressError(e.target.value)}
-                placeholder="Street, City"
-              />
-            </div>
-            {addressError && (
-              <p className="text-red-500 text-xs mt-1">{addressError}</p>
-            )}
+            <FormInput
+              label="Address"
+              icon="hugeicons:location-05"
+              value={address}
+              onChange={(e) => handleAddressError(e.target.value)}
+              placeholder="Street, City"
+              error={addressError}
+            />
           </div>
           {/* Service Area */}
           <div>
-            <label className="block text-sm mb-1 text-gray-500">Select Service Area</label>
-            <div className="flex items-center border rounded border-gray-400 px-2">
-              <Icon icon="hugeicons:location-01" width="18" height="18" className="text-gray-400" />
-              <select
-                className="flex-1 p-2 outline-none border-gray-400"
-                value={serviceArea}
-                onChange={(e) => setServiceArea(e.target.value)}
-              >
-                <option value="">Select Service Area</option>
-                {SERVICE_AREAS.map((area) => (
-                  <option key={area.zipcode} value={area.zipcode}>
-                    {area.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {serviceAreaError && (
-              <p className="text-red-500 text-xs mt-1">{serviceAreaError}</p>
-            )}
+            <FormSelect
+              label="Select Service Area"
+              icon="hugeicons:location-01"
+              value={serviceArea}
+              onChange={(e) => setServiceArea(e.target.value)}
+              error={serviceAreaError}
+              options={SERVICE_AREAS.map(area => ({ value: area.zipcode, label: area.label }))}
+            />
           </div>
         </div>
         {/* CheckBox*/}

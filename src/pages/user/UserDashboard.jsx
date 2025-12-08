@@ -3,13 +3,14 @@ import { useAuth } from '../../context/AuthContext';
 import UserLayout from '../../components/layouts/UserLayout';
 import UserStatsCard from '../../components/user/UserStatsCard';
 import UserDataTable from '../../components/user/UserDataTable';
+import UserPaymentTable from '../../components/user/UserPaymentTable';
 import UserDetailBox from '../../components/user/UserDetailBox';
 import { userService } from '../../services/userService';
 
 export default function UserDashboard() {
     const { userData, currentUser } = useAuth();
     
-    const user = userData || { name: 'User', email: '', phone: '' };
+    const user = userData || { fullName: 'User', email: '', phone: '' };
 
     const [activeTab, setActiveTab] = useState('pickups');
     const [stats, setStats] = useState({
@@ -77,9 +78,20 @@ export default function UserDashboard() {
         { title: 'Total Spent', value: `₦${stats.totalSpent.toLocaleString()}`, icon: 'hugeicons:money-bag-02' },
     ];
 
+    // combine payments from pickups and orders
+    const allPayments = [
+        ...recentPickups.map(p => ({ ...p, type: 'pickup' })),
+        ...recentOrders.map(o => ({ ...o, type: 'order' }))
+    ].sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+        return dateB - dateA;
+    });
+
     const tabs = [
         { id: 'pickups', label: `Pickup Requests (${recentPickups.length})` },
         { id: 'orders', label: `Bin Orders (${recentOrders.length})` },
+        { id: 'payments', label: `Payments (${allPayments.length})` },
         { id: 'messages', label: `Messages (${messages.length})` },
     ];
 
@@ -90,11 +102,11 @@ export default function UserDashboard() {
     };
 
     return (
-        <UserLayout userName={user.name} counts={sidebarCounts}>
+        <UserLayout userName={user.fullName} counts={sidebarCounts}>
             <div className="space-y-8">
                 {/* welcome */}
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Hi, <span className="font-medium">{user.name}</span></h1>
+                    <h1 className="text-lg font-bold text-gray-900">Hi, <span className="font-medium">{user.fullName}</span></h1>
                 </div>
 
                 {/* stats */}
@@ -140,6 +152,12 @@ export default function UserDashboard() {
                                 onViewDetails={(item) => openDetail(item, 'order')}
                             />
                         )}
+                        {activeTab === 'payments' && (
+                            <UserPaymentTable 
+                                data={allPayments} 
+                                onViewDetails={(item) => openDetail(item, item.type === 'pickup' ? 'pickup' : 'order')}
+                            />
+                        )}
                         {activeTab === 'messages' && (
                             <UserDataTable 
                                 type="messages"
@@ -157,6 +175,7 @@ export default function UserDashboard() {
                 data={selected}
                 show={showDetail}
                 onClose={closeDetail}
+                user={user}
             />
         </UserLayout>
     );

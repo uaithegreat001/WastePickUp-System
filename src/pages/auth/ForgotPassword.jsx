@@ -2,17 +2,15 @@ import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../../firebaseConfig.js";
-import Disclaimer from "../../components/ui/Disclaimer.jsx";
+import { auth } from "../../lib/firebase.js";
 import Logo from "../../assets/Logo-Transparent.png";
-import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
-import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
-import Spinner from "../../components/ui/Spinner.jsx";
+import SuccessBox from "../../components/common/SuccessBox";
+import ErrorBox from "../../components/common/ErrorBox";
+import LoadingBox from "../../components/common/LoadingBox.jsx";
+import { FormInput } from "../../components/common/FormInput";
 
 export default function ForgotPassword() {
   // States
-    const [disclaimer, setDisclaimer] = useState(true);
-  
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -75,18 +73,9 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center px-2 sm:px-4 relative">
-      <Disclaimer
-              show={disclaimer}
-              title ="Note:"
-              message="Please check your spam folder if email send to you not found!"
-              onClose={() => setDisclaimer(false)}
-              className="!max-w-lg sm:!max-w-md md:!max-w-lg bg-blue-100 " />
-      {/* Spinner */}
-      <Spinner show={loading} message="Sending reset link..." />
-
-      {/* Reusable Popups */}
-      <SuccessPopup show={showSuccess} message={popupMessage} />
-      <ErrorPopup show={showError} message={popupMessage} />
+      <LoadingBox show={loading} message="Sending reset link..." />
+      <SuccessBox show={showSuccess} message={popupMessage} onClose={() => setShowSuccess(false)} />
+      <ErrorBox show={showError} message={popupMessage} onClose={() => setShowError(false)} />
 
       {/* Main Form Card */}
       <form
@@ -103,23 +92,15 @@ export default function ForgotPassword() {
 
         {/* Email */}
         <div className="mb-4">
-          <label className="block text-xs sm:text-sm mb-1 text-gray-500">Email</label>
-          <div className="flex items-center border rounded px-2 border-gray-400">
-            <Icon
-              icon="hugeicons:mail-01"
-              width="16"
-              height="16"
-              className="text-gray-400"
-            />
-            <input
-              type="email"
-              className="flex-1 p-2 outline-none text-sm sm:text-sm"
-              value={email}
-              onChange={(e) => handleEmailError(e.target.value)}
-              placeholder="Enter email"
-            />
-          </div>
-          {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
+          <FormInput
+            label="Email"
+            icon="hugeicons:mail-01"
+            type="email"
+            value={email}
+            onChange={(e) => handleEmailError(e.target.value)}
+            placeholder="Enter email"
+            error={emailError}
+          />
         </div>
 
         {/* Submit */}

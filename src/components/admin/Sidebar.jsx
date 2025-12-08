@@ -5,18 +5,21 @@ import { useAuth } from '../../context/AuthContext';
 
 import logo from '../../assets/Logo-Transparent.png';
 
-export default function UserSidebar({ isOpen, toggleSidebar, counts = {} }) {
+export default function Sidebar({ isOpen, toggleSidebar }) {
     const location = useLocation();
     const navigate = useNavigate();
     const { logout } = useAuth();
     const [loggingOut, setLoggingOut] = useState(false);
 
     const menuItems = [
-        { name: 'Dashboard', icon: 'hugeicons:home-01', path: '/user/dashboard' },
-        { name: 'Request Pickup', icon: 'hugeicons:clean', path: '/user/request-pickup', countKey: 'pickups' },
-        { name: 'Order Bin', icon: 'hugeicons:waste', path: '/user/order-bin', countKey: 'orders' },
-        { name: 'Message', icon: 'hugeicons:align-box-middle-left', path: '/user/message', countKey: 'messages' },
-        { name: 'Profile', icon: 'hugeicons:user-circle-02', path: '/user/profile' },
+        { name: 'Overview', icon: 'hugeicons:dashboard-square-02', path: '/admin/dashboard' },
+        { name: 'Pickup Requests', icon: 'hugeicons:clean', path: '/admin/pickup-requests' },
+        { name: 'Bin Orders', icon: 'hugeicons:waste', path: '/admin/bin-orders' },
+        { name: 'Users', icon: 'hugeicons:user-group-03', path: '/admin/users' },
+        { name: 'Payments', icon: 'hugeicons:credit-card', path: '/admin/payments' },
+        { name: 'Users Messages', icon: 'hugeicons:align-box-middle-left', path: '/admin/support' },
+        { name: 'Admin Profile', icon: 'hugeicons:user-circle-02', path: '/admin/profile' },
+        { name: 'Settings', icon: 'hugeicons:settings-02', path: '/admin/settings' },
     ];
 
     const handleLogout = async () => {
@@ -25,7 +28,7 @@ export default function UserSidebar({ isOpen, toggleSidebar, counts = {} }) {
         try {
             setLoggingOut(true);
             await logout();
-            navigate('/login');
+            navigate('/admin/login');
         } catch (error) {
             console.error('Logout failed:', error);
             alert('Failed to logout. Please try again.');
@@ -50,29 +53,19 @@ export default function UserSidebar({ isOpen, toggleSidebar, counts = {} }) {
 
             <nav className="mt-6 px-4 space-y-2">
                 {menuItems.map((item) => {
-                    // For dashboard, match both /dashboard and /user/dashboard
-                    const isActive = item.path === '/user/dashboard' 
-                        ? (location.pathname === '/dashboard' || location.pathname === '/user/dashboard')
-                        : location.pathname === item.path;
-                    
-                    const count = item.countKey ? counts[item.countKey] : null;
-                    const showBadge = count !== null && count !== undefined && count > 0;
-                    
+                    const isActive = location.pathname === item.path;
                     return (
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
                                 isActive 
                                     ? 'bg-primary/10 text-primary font-medium' 
                                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                             }`}
                         >
-                            <div className="flex items-center gap-3">
-                                <Icon icon={item.icon} className="w-5 h-5" />
-                                <span>{item.name}</span>
-                            </div>
-
+                            <Icon icon={item.icon} className="w-5 h-5" />
+                            <span>{item.name}</span>
                         </Link>
                     );
                 })}

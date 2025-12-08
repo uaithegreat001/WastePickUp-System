@@ -3,19 +3,19 @@ import { useAuth } from '../../context/AuthContext';
 import UserLayout from '../../components/layouts/UserLayout';
 import ServiceForm from '../../components/user/ServiceForm';
 import { userService } from '../../services/userService';
-import { Icon } from '@iconify/react';
+import SuccessBox from '../../components/common/SuccessBox';
 
 export default function OrderBin() {
     const [showSuccess, setShowSuccess] = useState(false);
     const { userData, currentUser } = useAuth();
 
-    const user = userData || { name: 'User', email: '', phone: '' };
+    const user = userData || { fullName: 'User', email: '', phone: '' };
 
     const handleSubmit = async (formData) => {
         try {
             const completeData = {
                 ...formData,
-                userName: user.name,
+                userName: user.fullName,
                 userEmail: user.email,
                 userPhone: user.phone,
                 userId: currentUser?.uid || ''
@@ -32,7 +32,7 @@ export default function OrderBin() {
     };
 
     return (
-        <UserLayout userName={user.name}>
+        <UserLayout userName={user.fullName}>
             <div className="max-w-4xl space-y-6">
                 <div>
                     <h1 className="text-lg font-bold text-gray-900">Order Waste Bin</h1>
@@ -41,24 +41,19 @@ export default function OrderBin() {
                     </p>
                 </div>
 
-                {showSuccess && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                        <Icon icon="hugeicons:checkmark-circle-02" className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                            <h3 className="text-sm font-semibold text-green-900">Order Submitted Successfully!</h3>
-                            <p className="text-xs text-green-700 mt-1">
-                                Your bin order has been submitted. We will process and deliver your order soon.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
                 <ServiceForm 
                     type="order"
                     onSubmit={handleSubmit}
                     userData={user}
                 />
             </div>
+
+            <SuccessBox
+                show={showSuccess}
+                onClose={() => setShowSuccess(false)}
+                title="Order Submitted Successfully!"
+                message="Your bin order has been submitted. We will process and deliver your order soon."
+            />
         </UserLayout>
     );
 }

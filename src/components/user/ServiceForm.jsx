@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-import { FormInput, FormSelect } from './inputs/FormInput';
-import { SERVICE_AREAS } from '../../constants/serviceAreas';
+import { FormInput, FormSelect } from '../common/FormInput';
+import { SERVICE_AREAS } from '../../lib/constants';
+import { adminService } from '../../services/adminService';
 
-// pricing for bin orders (buying bins)
-const ORDER_PRICES = [
+// Default pricing (used as fallback)
+const DEFAULT_ORDER_PRICES = [
     { value: '50', label: '50 Litres', price: 5000, image: '/bin-50l.png', description: 'Perfect for small households or minimal waste' },
     { value: '120', label: '120 Litres', price: 8500, image: '/bin-120l.png', description: 'Ideal for average households and regular use' },
     { value: '240', label: '240 Litres', price: 15000, image: '/bin-240l.png', description: 'Best for large households or commercial use' }
 ];
 
-// pricing for pickups (waste collection)
-const PICKUP_PRICES = [
+const DEFAULT_PICKUP_PRICES = [
     { value: '50', label: '50 Litres', price: 1500 },
     { value: '120', label: '120 Litres', price: 3000 },
     { value: '240', label: '240 Litres', price: 5000 }
@@ -20,7 +20,13 @@ const PICKUP_PRICES = [
 // Handles both bin orders and pickup requests
 export default function ServiceForm({ type, onSubmit, userData }) {
     const isOrder = type === 'order';
-    const prices = isOrder ? ORDER_PRICES : PICKUP_PRICES;
+    
+    // Dynamic pricing state
+    const [orderPrices, setOrderPrices] = useState(DEFAULT_ORDER_PRICES);
+    const [pickupPrices, setPickupPrices] = useState(DEFAULT_PICKUP_PRICES);
+    const [loadingPrices, setLoadingPrices] = useState(true);
+    
+    const prices = isOrder ? orderPrices : pickupPrices;
     
     const [form, setForm] = useState({
         address: '',
@@ -34,7 +40,32 @@ export default function ServiceForm({ type, onSubmit, userData }) {
     const [errors, setErrors] = useState({});
     const [total, setTotal] = useState(0);
 
-    // recalculate total when bin size or quantity changes
+    // Fetch pricing from Firebase on mount
+    useEffect(() => {
+        const fetchPricing = async () => {
+            try {
+                const data = await adminService.getPricingSettings();
+                if (data.pickupPrices) {
+                    setPickupPrices(data.pickupPrices);
+                }
+                if (data.orderPrices) {
+                    // Merge with descriptions and images from defaults
+                    const mergedOrderPrices = data.orderPrices.map((price, index) => ({
+                        ...DEFAULT_ORDER_PRICES[index],
+                        ...price
+                    }));
+                    setOrderPrices(mergedOrderPrices);
+                }
+            } catch (error) {
+                console.error('Error fetching pricing:', error);
+            } finally {
+                setLoadingPrices(false);
+            }
+        };
+        fetchPricing();
+    }, []);
+
+    // Recalculate total when bin size, quantity, or prices change
     useEffect(() => {
         const bin = prices.find(b => b.value === form.binSize);
         setTotal(bin ? bin.price * form.quantity : 0);
@@ -72,8 +103,8 @@ export default function ServiceForm({ type, onSubmit, userData }) {
                 zipcode: area.zipcode,
                 lga: area.lga,
                 contactPhone: phone,
-                quantityOfBin: form.quantity,
-                binLitre: form.binSize,
+                quantity: form.quantity,
+                binSize: form.binSize,
                 amount: total,
                 ...(isOrder && form.notes && { notes: form.notes })
             };
@@ -103,7 +134,7 @@ export default function ServiceForm({ type, onSubmit, userData }) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="flex items-center gap-2">
                             <Icon icon="hugeicons:user" className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-900">{userData.name}</span>
+                            <span className="text-sm font-medium text-gray-900">{userData.fullName}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Icon icon="hugeicons:mail-01" className="w-4 h-4 text-gray-400" />
@@ -126,6 +157,7 @@ export default function ServiceForm({ type, onSubmit, userData }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormInput
                             label={isOrder ? 'Delivery Address' : 'Pickup Address'}
+                            icon="hugeicons:location-05"
                             value={form.address}
                             onChange={(e) => updateField('address', e.target.value)}
                             error={errors.address}
@@ -135,6 +167,7 @@ export default function ServiceForm({ type, onSubmit, userData }) {
                         />
                         <FormSelect
                             label="Select Service Area"
+                            icon="hugeicons:location-01"
                             value={form.serviceArea}
                             onChange={(e) => updateField('serviceArea', e.target.value)}
                             error={errors.serviceArea}
@@ -143,6 +176,7 @@ export default function ServiceForm({ type, onSubmit, userData }) {
                         />
                         <FormInput
                             label="Contact Phone (Optional)"
+                            icon="hugeicons:call-02"
                             type="tel"
                             value={form.contactPhone}
                             onChange={(e) => updateField('contactPhone', e.target.value)}
@@ -159,6 +193,7 @@ export default function ServiceForm({ type, onSubmit, userData }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormSelect
                             label="Bin Size"
+                            icon="hugeicons:delete-02"
                             value={form.binSize}
                             onChange={(e) => updateField('binSize', e.target.value)}
                             error={errors.binSize}
@@ -167,6 +202,7 @@ export default function ServiceForm({ type, onSubmit, userData }) {
                         />
                         <FormInput
                             label="Quantity of Bins"
+                            icon="hugeicons:hashtag"
                             type="number"
                             min="1"
                             value={form.quantity}

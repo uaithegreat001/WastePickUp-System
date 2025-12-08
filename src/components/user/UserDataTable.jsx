@@ -1,20 +1,10 @@
 import React from 'react';
 import { Icon } from '@iconify/react';
 import StatusBadge from '../admin/StatusBadge';
+import { formatDate } from '../../lib/dateUtils';
 
 // Displays pickups, orders, or messages in a table format
 export default function UserDataTable({ type, data, onViewDetails }) {
-    
-    // format timestamp to a short date string
-    const formatDate = (timestamp) => {
-        if (!timestamp) return 'N/A';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
 
     // show empty state if no data
     if (!data || data.length === 0) {
@@ -41,7 +31,7 @@ export default function UserDataTable({ type, data, onViewDetails }) {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                                     <button
                                         onClick={() => onViewDetails(item)}
-                                        className="text-primary hover:text-primary-hover font-medium"
+                                        className="text-gray-600 hover:text-gray-900 font-medium"
                                     >
                                         View Details
                                     </button>
@@ -80,11 +70,11 @@ function EmptyState({ type }) {
 function PickupHeaders() {
     return (
         <>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Date</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Address</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Amount</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Status</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 capitalize">Action</th>
         </>
     );
 }
@@ -92,12 +82,12 @@ function PickupHeaders() {
 function OrderHeaders() {
     return (
         <>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bin Size</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Date</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Bin Size</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Quantity</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Amount</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Status</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 capitalize">Action</th>
         </>
     );
 }
@@ -105,10 +95,9 @@ function OrderHeaders() {
 function MessageHeaders() {
     return (
         <>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Subject</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize">Date</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 capitalize">Action</th>
         </>
     );
 }
@@ -120,7 +109,7 @@ function PickupRow({ item, formatDate }) {
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {formatDate(item.createdAt)}
             </td>
-            <td className="px-6 py-4 text-sm text-gray-900">
+            <td className="px-6 py-4 text-sm text-gray-900 max-w-[200px] truncate" title={item.pickupAddress}>
                 {item.pickupAddress || 'N/A'}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -146,7 +135,7 @@ function OrderRow({ item, formatDate }) {
                 {item.quantity || 0}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                ₦{(item.amount || item.totalAmount || 0).toLocaleString()}
+                ₦{(item.amount || 0).toLocaleString()}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
                 <StatusBadge status={item.status} size="small" />
@@ -159,7 +148,7 @@ function MessageRow({ item, formatDate }) {
     const getStatusColor = (status) => {
         const colors = {
             'open': 'bg-blue-100 text-blue-700',
-            'in_progress': 'bg-yellow-100 text-yellow-700',
+            'in-progress': 'bg-yellow-100 text-yellow-700',
             'resolved': 'bg-green-100 text-green-700',
             'closed': 'bg-gray-100 text-gray-700'
         };
@@ -174,11 +163,6 @@ function MessageRow({ item, formatDate }) {
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
                 <span className="text-sm text-gray-600">{formatDate(item.createdAt)}</span>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                    {item.status?.replace('_', ' ') || 'unknown'}
-                </span>
             </td>
         </>
     );

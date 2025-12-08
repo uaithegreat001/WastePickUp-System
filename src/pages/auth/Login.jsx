@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth, db } from "../../firebaseConfig.js";
+import { auth, db } from "../../lib/firebase.js";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import Logo from "../../assets/Logo-Transparent.png";
-import Spinner from "../../components/ui/Spinner.jsx";
-import SuccessPopup from "../../components/ui/SuccessPopUp.jsx";
-import ErrorPopup from "../../components/ui/ErrorPopUp.jsx";
+import LoadingBox from "../../components/common/LoadingBox";
+import ErrorBox from "../../components/common/ErrorBox";
+import { FormInput } from "../../components/common/FormInput";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -141,9 +141,8 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center px-3">
-      <Spinner show={loading} message="Logging you in..." />
-      <SuccessPopup show={showSuccess} message={popupMessage} />
-      <ErrorPopup show={showError} message={popupMessage} />
+      <LoadingBox show={loading} message="Logging you in..." />
+      <ErrorBox show={showError} message={popupMessage} onClose={() => setShowError(false)} />
 
       <form
         onSubmit={handleSubmit}
@@ -159,42 +158,38 @@ export default function Login() {
 
         {/* Email */}
         <div className="mb-4">
-          <label className="block text-sm mb-1 text-gray-500">Email</label>
-          <div className="flex items-center border rounded px-2 border-gray-400">
-            <Icon icon="hugeicons:mail-01" width="18" height="18" className="text-gray-400" />
-            <input
-              type="email"
-              className="flex-1 p-2 outline-none"
-              value={email}
-              onChange={(e) => handleEmailError(e.target.value)}
-              placeholder="Enter email"
-            />
-          </div>
-          {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
+          <FormInput
+            label="Email"
+            icon="hugeicons:mail-01"
+            type="email"
+            value={email}
+            onChange={(e) => handleEmailError(e.target.value)}
+            placeholder="Enter email"
+            error={emailError}
+          />
         </div>
 
         {/* Password */}
         <div className="mb-4">
-          <label className="block text-sm mb-1 text-gray-500">Password</label>
-          <div className="flex items-center border rounded px-2 border-gray-400">
-            <Icon icon="hugeicons:square-lock-password" width="20" height="20" className="text-gray-400" />
-            <input
-              type={showPassword ? "text" : "password"}
-              className="flex-1 p-2 outline-none"
-              value={password}
-              onChange={(e) => handlePasswordError(e.target.value)}
-              placeholder="Enter password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="ml-2 text-xs cursor-pointer text-gray-500 hover:underline"
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-          </div>
-          {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
-          <div className="text-gray-500 text-sm mt-5 mb-5 flex justify-start items-center gap-1">
+          <FormInput
+            label="Password"
+            icon="hugeicons:square-lock-password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => handlePasswordError(e.target.value)}
+            placeholder="Enter password"
+            error={passwordError}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-xs cursor-pointer text-gray-500 hover:underline"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            }
+          />
+          <div className="text-gray-500 text-sm mt-2 mb-5 flex justify-start items-center gap-1">
             <span>Forgot password?</span>
             <Link to="/ForgotPassword" className="text-sm text-[rgb(36,157,119)] hover:underline">
               Reset password

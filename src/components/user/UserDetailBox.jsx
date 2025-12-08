@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import StatusBadge from '../admin/StatusBadge';
+import { formatDate } from '../../lib/dateUtils';
+import PaymentButton from '../PaymentButton';
 
 // Shows details for pickups, orders, or messages in a popup overlay
-export default function UserDetailBox({ type, data, show, onClose }) {
+export default function UserDetailBox({ type, data, show, onClose, user }) {
     
     // close on Escape key
     useEffect(() => {
@@ -21,28 +23,21 @@ export default function UserDetailBox({ type, data, show, onClose }) {
         if (e.target === e.currentTarget) onClose();
     };
 
-    // format timestamp to readable date
-    const formatDate = (timestamp, includeTime = true) => {
-        if (!timestamp) return 'N/A';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        const options = {
-            year: 'numeric',
-            month: includeTime ? 'long' : 'short',
-            day: 'numeric',
-            ...(includeTime && { weekday: 'long', hour: '2-digit', minute: '2-digit' })
-        };
-        return date.toLocaleDateString('en-US', options);
-    };
+    // format date with time and weekday for headers
+    const formatFullDate = (timestamp) => formatDate(timestamp, { includeTime: true, includeWeekday: true, dateStyle: 'long' });
+    
+    // format date without time for scheduled dates
+    const formatShortDate = (timestamp) => formatDate(timestamp);
 
     // figure out which title and subtitle to show
     const getHeader = () => {
         switch (type) {
             case 'pickup':
-                return { title: 'Pickup Request Details', sub: `Requested on ${formatDate(data.createdAt)}` };
+                return { title: 'Pickup Request Details', sub: `Requested on ${formatFullDate(data.createdAt)}` };
             case 'order':
-                return { title: 'Bin Order Details', sub: `Ordered on ${formatDate(data.createdAt)}` };
+                return { title: 'Bin Order Details', sub: `Ordered on ${formatFullDate(data.createdAt)}` };
             case 'message':
-                return { title: 'Message Details', sub: `Sent on ${formatDate(data.createdAt)}` };
+                return { title: 'Message Details', sub: `Sent on ${formatFullDate(data.createdAt)}` };
             default:
                 return { title: 'Details', sub: '' };
         }
@@ -77,9 +72,9 @@ export default function UserDetailBox({ type, data, show, onClose }) {
 
                 {/* body - render based on type */}
                 <div className="px-6 py-4 space-y-6">
-                    {type === 'message' && <MessageContent data={data} formatDate={formatDate} />}
-                    {type === 'pickup' && <PickupContent data={data} formatDate={formatDate} />}
-                    {type === 'order' && <OrderContent data={data} formatDate={formatDate} />}
+                    {type === 'message' && <MessageContent data={data} formatDate={formatShortDate} />}
+                    {type === 'pickup' && <PickupContent data={data} formatDate={formatShortDate} user={user} onClose={onClose} />}
+                    {type === 'order' && <OrderContent data={data} formatDate={formatShortDate} user={user} onClose={onClose} />}
                 </div>
 
                 {/* footer with close button for messages */}
@@ -103,7 +98,7 @@ function MessageContent({ data, formatDate }) {
     const getStatusColor = (status) => {
         const colors = {
             'open': 'bg-blue-100 text-blue-700',
-            'in_progress': 'bg-yellow-100 text-yellow-700',
+            'in-progress': 'bg-yellow-100 text-yellow-700',
             'resolved': 'bg-green-100 text-green-700',
             'closed': 'bg-gray-100 text-gray-700'
         };
@@ -151,7 +146,7 @@ function MessageContent({ data, formatDate }) {
 }
 
 // pickup-specific content
-function PickupContent({ data, formatDate }) {
+function PickupContent({ data, formatDate, user, onClose }) {
     return (
         <>
             {/* status row */}
@@ -200,11 +195,11 @@ function PickupContent({ data, formatDate }) {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-xs font-medium text-gray-500 block mb-1.5">Bin Size</label>
-                                <p className="text-gray-900 font-medium">{data.binLitre || data.binSize || 'N/A'} Litres</p>
+                                <p className="text-gray-900 font-medium">{data.binSize || 'N/A'} Litres</p>
                             </div>
                             <div>
                                 <label className="text-xs font-medium text-gray-500 block mb-1.5">Quantity</label>
-                                <p className="text-gray-900 font-medium">{data.quantityOfBin || 0} Bins</p>
+                                <p className="text-gray-900 font-medium">{data.quantity || 0} Bins</p>
                             </div>
                         </div>
                         <div className="pt-3 border-t border-gray-200">
@@ -214,12 +209,26 @@ function PickupContent({ data, formatDate }) {
                     </div>
                 </div>
             </div>
+
+            
+            {data.status === 'pending' && (
+                <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
+                     <PaymentButton 
+                        email={user?.email} 
+                        amount={data.amount || 0} 
+                        onSuccess={() => {
+                            // TODO: Refresh data or close
+                            onClose();
+                        }}
+                    />
+                </div>
+            )}
         </>
     );
 }
 
 // order-specific content
-function OrderContent({ data, formatDate }) {
+function OrderContent({ data, formatDate, user, onClose }) {
     return (
         <>
             {/* status row */}
@@ -277,7 +286,7 @@ function OrderContent({ data, formatDate }) {
                         </div>
                         <div className="pt-3 border-t border-gray-200">
                             <label className="text-xs font-medium text-gray-500 block mb-1.5">Total Amount</label>
-                            <p className="text-xl font-bold text-primary">₦{(data.amount || data.totalAmount || 0).toLocaleString()}</p>
+                            <p className="text-xl font-bold text-primary">₦{(data.amount || 0).toLocaleString()}</p>
                         </div>
                         {data.notes && (
                             <div className="pt-3 border-t border-gray-200">
@@ -288,6 +297,20 @@ function OrderContent({ data, formatDate }) {
                     </div>
                 </div>
             </div>
+
+
+            {data.status === 'pending' && (
+                <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
+                     <PaymentButton 
+                        email={user?.email} 
+                        amount={data.amount || 0} 
+                        onSuccess={() => {
+                             // TODO: Refresh data or close
+                             onClose();
+                        }}
+                    />
+                </div>
+            )}
         </>
     );
 }
