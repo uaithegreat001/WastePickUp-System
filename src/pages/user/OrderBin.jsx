@@ -35,10 +35,8 @@ export default function OrderBin() {
         <UserLayout userName={user.fullName}>
             <div className="max-w-4xl space-y-6">
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Order Waste Bin</h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Purchase or rent a new waste bin by filling out the form below.
-                    </p>
+                    <h1 className="text-md font-medium text-gray-900">Order Waste Bin</h1>
+                    
                 </div>
 
                 <ServiceForm 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useAuth } from '../../context/AuthContext';
@@ -12,10 +12,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     const [loggingOut, setLoggingOut] = useState(false);
 
     const menuItems = [
-        { name: 'Overview', icon: 'hugeicons:dashboard-square-02', path: '/admin/dashboard' },
-        { name: 'Pickup Requests', icon: 'hugeicons:clean', path: '/admin/pickup-requests' },
-        { name: 'Bin Orders', icon: 'hugeicons:waste', path: '/admin/bin-orders' },
-        { name: 'Users', icon: 'hugeicons:user-group-03', path: '/admin/users' },
+        { name: 'Dashboard', icon: 'hugeicons:dashboard-square-02', path: '/admin/dashboard' },        { name: 'Users', icon: 'hugeicons:user-group-03', path: '/admin/users' },
         { name: 'Payments', icon: 'hugeicons:credit-card', path: '/admin/payments' },
         { name: 'Users Messages', icon: 'hugeicons:align-box-middle-left', path: '/admin/support' },
         { name: 'Admin Profile', icon: 'hugeicons:user-circle-02', path: '/admin/profile' },
@@ -86,3 +83,4 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         </aside>
     );
 }
+

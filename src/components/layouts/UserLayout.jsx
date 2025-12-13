@@ -19,7 +19,7 @@ export default function UserLayout({ children, userName, counts = {} }) {
                 </main>
             </div>
             
-            {/* Mobile overlay */}
+            {/* Mobile view*/}
             {isSidebarOpen && (
                 <div 
                     className="fixed inset-0 z-30 bg-black/50 lg:hidden"

@@ -300,29 +300,11 @@ export default function CreateAccount() {
             />
           </div>
         </div>
-        {/* CheckBox*/}
-        <div className="mt-5 flex items-center">
-          <input
-            type="checkbox"
-            id="agree"
-            className="w-4 h-4 cursor-pointer accent-[rgb(36,157,119)] mr-2 "
-            checked={agree}
-            onChange={() => setAgree(!agree)}
-          />
-          <label htmlFor="agree" className="text-sm gap-1  flex flex-wrap text-gray-500">
-            I agree with the
-            <Link to="/TermsPrivacy" className="hover:underline">
-              Terms and Privacy
-            </Link>
-          </label>
-        </div>
-        {agreeError && (
-          <p className="text-red-500 text-xs mb-2">{agreeError}</p>
-        )}
+  
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-2 rounded mt-3 cursor-pointer text-white ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[rgb(36,157,119)] hover:opacity-90"
+          className={`w-full py-2 rounded mt-5 cursor-pointer text-white ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[rgb(36,157,119)] hover:opacity-90"
             }`}
         >
           {loading ? "Processing..." : "Create Account"}

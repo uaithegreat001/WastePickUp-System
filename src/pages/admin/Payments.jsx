@@ -1,213 +1,182 @@
-import React, { useState, useEffect } from 'react';
-import AdminLayout from '../../components/layouts/AdminLayout';
-import { Icon } from '@iconify/react';
-import StatusBadge from '../../components/admin/StatusBadge';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { formatDate } from '../../lib/dateUtils';
+import React, { useState, useEffect } from "react";
+import AdminLayout from "../../components/layouts/AdminLayout";
+import { adminService } from "../../services/adminService";
 
 export default function Payments() {
-    const [payments, setPayments] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedPayment, setSelectedPayment] = useState(null);
-    const [showModal, setShowModal] = useState(false);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-        const fetchPayments = async () => {
-            try {
-                // Fetch from both pickup requests and bin orders and combine
-                const [pickupSnapshot, orderSnapshot] = await Promise.all([
-                    getDocs(query(collection(db, 'pickupRequests'), orderBy('createdAt', 'desc'))),
-                    getDocs(query(collection(db, 'binOrders'), orderBy('createdAt', 'desc')))
-                ]);
+  useEffect(() => {
+    fetchPayments();
+  }, []);
 
-                const pickupPayments = pickupSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                    type: 'Pickup Service',
-                    createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date()
-                }));
+  const fetchPayments = async () => {
+    try {
+      const [pickups, orders] = await Promise.all([
+        adminService.getPickupRequests(),
+        adminService.getBinOrders(),
+      ]);
 
-                const orderPayments = orderSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                    type: 'Bin Order',
-                    createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date()
-                }));
+      const pickupPayments = pickups
+        .filter((p) => p.amount && Number(p.amount) > 0)
+        .map((p) => ({
+          id: p.id,
+          user: p.userName || p.contactName || "Unknown User",
+          email: p.userEmail || p.contactPhone || "-",
+          amount: Number(p.amount),
+          date: p.createdAt,
+          type: "Pickup Request",
+          status: p.paymentStatus || (p.status === "paid" ? "paid" : "pending"),
+          reference: p.paymentReference || "-",
+        }));
 
-                const allPayments = [...pickupPayments, ...orderPayments].sort((a, b) => b.createdAt - a.createdAt);
-                setPayments(allPayments);
-            } catch (error) {
-                console.error('Error fetching payments:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+      const orderPayments = orders
+        .filter((o) => o.amount && Number(o.amount) > 0)
+        .map((o) => ({
+          id: o.id,
+          user: o.userName || o.contactName || "Unknown User",
+          email: o.userEmail || o.contactPhone || "-",
+          amount: Number(o.amount),
+          date: o.createdAt,
+          type: "Bin Order",
+          status: o.paymentStatus || (o.status === "paid" ? "paid" : "pending"),
+          reference: o.paymentReference || "-",
+        }));
 
-        fetchPayments();
-    }, []);
+      const allPayments = [...pickupPayments, ...orderPayments].sort(
+        (a, b) => b.date - a.date
+      );
 
-    // Format date with time using our utility
-    const formatDateTime = (date) => formatDate(date, { includeTime: true });
+      setPayments(allPayments);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-    const completedRevenue = payments
-        .filter(p => p.status === 'completed')
-        .reduce((sum, p) => sum + (p.amount || 0), 0);
-    const pendingRevenue = payments
-        .filter(p => p.status === 'pending')
-        .reduce((sum, p) => sum + (p.amount || 0), 0);
+  const filteredPayments = payments.filter(
+    (payment) =>
+      payment.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "paid":
+        return "bg-green-100 text-green-700";
+      case "pending":
+        return "bg-yellow-100 text-yellow-700";
+      case "failed":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
 
-
-    const handleViewPayment = (payment) => {
-        setSelectedPayment(payment);
-        setShowModal(true);
-    };
-
-    return (
-        <AdminLayout>
-            <div className="space-y-6">
-                {/* Header */}
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-lg font-bold text-gray-900">Payments & Revenue</h1>
-                        <p className="text-xs text-gray-500 mt-1">Track all transactions and revenue</p>
-                    </div>
-                    <div className="bg-gray-100 px-4 py-2 rounded-lg">
-                        <span className="text-sm font-medium text-gray-600">Total Revenue: ₦{totalRevenue.toLocaleString()}</span>
-                    </div>
-                </div>
-
-
-
-
-
-                {/* Payments Table */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize tracking-wider">Transaction ID</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize tracking-wider">User</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize tracking-wider">Type</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize tracking-wider">Amount</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize tracking-wider">Date</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 capitalize tracking-wider">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {payments.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                                            No payments found
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    payments.map((payment) => (
-                                        <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 text-sm text-gray-600 font-mono">
-                                                {payment.id.substring(0, 8)}...
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                                {payment.userName || 'Unknown'}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    <Icon 
-                                                        icon={payment.type === 'Pickup Service' ? 'hugeicons:clean' : 'hugeicons:waste'} 
-                                                        className="w-4 h-4 text-gray-600" 
-                                                    />
-                                                    <span className="text-sm text-gray-600">{payment.type}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-bold text-gray-900">
-                                                ₦{(payment.amount || 0).toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">
-                                                {formatDateTime(payment.createdAt)}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <StatusBadge status={payment.status} size="small" />
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <button
-                                                    onClick={() => handleViewPayment(payment)}
-                                                    className="text-gray-600 hover:text-gray-900 font-medium text-sm"
-                                                >
-                                                    View Details
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                </div>
-
-
-            {/* Payment Detail Modal */}
-            {showModal && selectedPayment && (
-                <div 
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-                    onClick={() => setShowModal(false)}
-                >
-                    <div className="bg-white rounded-2xl w-full max-w-2xl p-6" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-gray-900">Transaction Details</h2>
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                                <Icon icon="hugeicons:cancel-01" className="w-6 h-6 text-gray-500" />
-                            </button>
+  return (
+    <AdminLayout title="Payments & Transactions">
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-md font-medium text-gray-900">
+            Transaction History{" "}
+            <span className="text-gray-400 font-normal text-sm">
+              ({payments.length})
+            </span>
+          </h1>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-500 capitalize tracking-wider">
+                    Reference
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 capitalize tracking-wider">
+                    User
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 capitalize tracking-wider">
+                    Type
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 capitalize tracking-wider">
+                    Amount
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 capitalize tracking-wider">
+                    Date
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 capitalize tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="py-8 text-center text-gray-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        Loading transactions...
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredPayments.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="py-8 text-center text-gray-500">
+                      No transactions found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPayments.map((payment) => (
+                    <tr
+                      key={`${payment.type}-${payment.id}`}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
+                      <td className="py-3 px-6 text-sm font-medium text-gray-900">
+                        #{payment.reference.substring(0, 8)}...
+                      </td>
+                      <td className="py-3 px-6">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900">
+                            {payment.user}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {payment.email}
+                          </span>
                         </div>
-
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-4 p-5 bg-gray-50 rounded-xl">
-                                <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-                                    <Icon 
-                                        icon={selectedPayment.type === 'Pickup Service' ? 'hugeicons:clean' : 'hugeicons:waste'} 
-                                        className="w-6 h-6 text-primary" 
-                                    />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 text-lg">{selectedPayment.type}</h3>
-                                    <p className="text-sm text-gray-500">ID: {selectedPayment.id}</p>
-                                </div>
-                                <div className="ml-auto text-right">
-                                    <h3 className="font-bold text-gray-900 text-xl">₦{(selectedPayment.amount || 0).toLocaleString()}</h3>
-                                    <StatusBadge status={selectedPayment.status} size="small" />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-medium text-gray-500 block mb-1.5">User Name</label>
-                                    <p className="text-gray-900 font-medium">{selectedPayment.userName || 'Unknown'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-500 block mb-1.5">User Email</label>
-                                    <p className="text-gray-900">{selectedPayment.userEmail || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-500 block mb-1.5">Date</label>
-                                    <p className="text-gray-900">{formatDateTime(selectedPayment.createdAt)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-500 block mb-1.5">Payment Method</label>
-                                    <p className="text-gray-900 capitalize">{selectedPayment.paymentMethod || 'Card'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </AdminLayout>
-    );
+                      </td>
+                      <td className="py-3 px-6">
+                        <span className="text-sm text-gray-700">
+                          {payment.type === "Bin Order" ? "Order" : "Pickup"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-6 text-sm font-bold text-gray-900">
+                        ?{payment.amount.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-6 text-sm text-gray-500">
+                        {payment.date
+                          ? new Date(payment.date).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td className="py-3 px-6">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                            payment.status
+                          )}`}
+                        >
+                          {payment.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </AdminLayout>
+  );
 }

@@ -261,6 +261,44 @@ export const adminService = {
         }
     },
 
+    async getUsers() {
+        try {
+            const usersSnapshot = await getDocs(collection(db, 'users'));
+            return usersSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    createdAt: toDate(data.createdAt)
+                };
+            });
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            return [];
+        }
+    },
+
+    async getSupportTickets() {
+        try {
+            const q = query(
+                collection(db, 'supportTickets'),
+                orderBy('createdAt', 'desc')
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    createdAt: toDate(data.createdAt)
+                };
+            });
+        } catch (error) {
+            console.error('Error fetching support tickets:', error);
+            return [];
+        }
+    },
+
     // Get pricing settings from Firebase or return defaults
     async getPricingSettings() {
         try {

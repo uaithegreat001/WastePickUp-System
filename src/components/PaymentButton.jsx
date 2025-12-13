@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { PaystackButton } from 'react-paystack';
-import axios from 'axios';
+import React, { useState } from "react";
+import { PaystackButton } from "react-paystack";
+import axios from "axios";
 
 // =====================================================
 // TODO: REPLACE THIS WITH YOUR ACTUAL PUBLIC KEY!
@@ -10,7 +10,7 @@ const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY; // Example
 
 // TODO: Update this URL after deploying functions (e.g. https://us-central1-YOUR-PROJECT.cloudfunctions.net/confirmPayment)
 // For local testing with emulators, it might look like http://localhost:5001/...
-const CONFIRM_PAYMENT_URL = "YOUR_CLOUD_FUNCTION_URL_HERE"; 
+const CONFIRM_PAYMENT_URL = "http://localhost:3000/verify-payment";
 
 const PaymentButton = ({ email, amount, onSuccess, onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ const PaymentButton = ({ email, amount, onSuccess, onClose }) => {
         const response = await axios.post(CONFIRM_PAYMENT_URL, {
           reference: reference.reference,
           email: email,
-          amount: amount * 100
+          amount: amount * 100,
         });
 
         if (response.data.success) {
@@ -39,7 +39,9 @@ const PaymentButton = ({ email, amount, onSuccess, onClose }) => {
         }
       } catch (error) {
         console.error("Backend verification error:", error);
-        alert("Payment successful, but could not connect to server for receipt.");
+        alert(
+          "Payment successful, but could not connect to server for receipt."
+        );
       } finally {
         setLoading(false);
       }
@@ -51,7 +53,10 @@ const PaymentButton = ({ email, amount, onSuccess, onClose }) => {
 
   return (
     <div className="payment-btn-container">
-      <PaystackButton className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition" {...componentProps} />
+      <PaystackButton
+        className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition"
+        {...componentProps}
+      />
     </div>
   );
 };

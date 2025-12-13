@@ -3,10 +3,10 @@ import { Icon } from '@iconify/react';
 import StatusBadge from '../admin/StatusBadge';
 import { formatDate } from '../../lib/dateUtils';
 
-// Displays pickups, orders, or messages in a table format
+// Tabular display of pickups, orders, payments or messages data
 export default function UserDataTable({ type, data, onViewDetails }) {
 
-    // show empty state if no data
+    // if empty data show 0
     if (!data || data.length === 0) {
         return <EmptyState type={type} />;
     }
@@ -45,13 +45,8 @@ export default function UserDataTable({ type, data, onViewDetails }) {
     );
 }
 
-// empty state when there's nothing to show
+// Empty state when there's data to show
 function EmptyState({ type }) {
-    const icons = {
-        pickups: 'hugeicons:clean',
-        orders: 'hugeicons:waste',
-        messages: 'hugeicons:chat-feedback-01'
-    };
     const texts = {
         pickups: 'No pickup requests yet',
         orders: 'No bin orders yet',
@@ -60,7 +55,6 @@ function EmptyState({ type }) {
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-            <Icon icon={icons[type]} className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">{texts[type]}</p>
         </div>
     );
@@ -102,7 +96,7 @@ function MessageHeaders() {
     );
 }
 
-// row content for each type
+// row content data for pickup
 function PickupRow({ item, formatDate }) {
     return (
         <>
@@ -121,7 +115,7 @@ function PickupRow({ item, formatDate }) {
         </>
     );
 }
-
+// row content data for bin orders
 function OrderRow({ item, formatDate }) {
     return (
         <>
@@ -143,7 +137,7 @@ function OrderRow({ item, formatDate }) {
         </>
     );
 }
-
+// row content data for messages
 function MessageRow({ item, formatDate }) {
     const getStatusColor = (status) => {
         const colors = {

@@ -15,8 +15,6 @@ export default function AdminProfile() {
         fullName: '',
         email: '',
         phone: '',
-        role: '',
-        department: '',
         joinedDate: new Date()
     });
 
@@ -26,8 +24,6 @@ export default function AdminProfile() {
                 fullName: userData.fullName || 'Admin User',
                 email: userData.email || '',
                 phone: userData.phone || '',
-                role: userData.role || 'Admin',
-                department: userData.department || 'Operations',
                 joinedDate: userData.createdAt ? new Date(userData.createdAt) : new Date()
             });
         }
@@ -52,7 +48,7 @@ export default function AdminProfile() {
             await userService.updateUserProfile(auth.currentUser.uid, {
                 fullName: adminData.fullName,
                 phone: adminData.phone,
-                department: adminData.department
+                
             });
             
             setIsEditing(false);
@@ -74,8 +70,7 @@ export default function AdminProfile() {
             <div className="max-w-4xl space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Admin Profile</h1>
-                    <p className="text-xs text-gray-500 mt-1">Manage your admin account settings</p>
+                    <h1 className="text-md font-medium text-gray-900">Admin Profile</h1>
                 </div>
 
                 <SuccessBox 
@@ -95,9 +90,7 @@ export default function AdminProfile() {
                             <div>
                                 <h2 className="text-xl font-bold text-gray-900">{adminData.fullName}</h2>
                                 <p className="text-sm text-gray-500">{adminData.role}</p>
-                                <p className="text-xs text-gray-400 mt-1">
-                                    Joined {adminData.joinedDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                                </p>
+                               
                             </div>
                         </div>
                         <button
@@ -119,14 +112,14 @@ export default function AdminProfile() {
                             ) : (
                                 <div>
                                     <label className="text-xs font-medium text-gray-500 block mb-2">Full Name</label>
-                                    <p className="text-gray-900 font-medium">{adminData.fullName}</p>
+                                    <p className="text-gray-700 font-medium">{adminData.fullName}</p>
                                 </div>
                             )}
                         </div>
 
                         <div>
                             <label className="text-xs font-medium text-gray-500 block mb-2">Email</label>
-                            <p className="text-gray-900 font-medium">{adminData.email}</p>
+                            <p className="text-gray-700 font-medium">{adminData.email}</p>
                             <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                         </div>
 
@@ -141,40 +134,17 @@ export default function AdminProfile() {
                             ) : (
                                 <div>
                                     <label className="text-xs font-medium text-gray-500 block mb-2">Phone Number</label>
-                                    <p className="text-gray-900 font-medium">{adminData.phone}</p>
+                                    <p className="text-gray-700 font-medium">{adminData.phone}</p>
                                 </div>
                             )}
                         </div>
 
-                        <div>
-                            {isEditing ? (
-                                <FormInput
-                                    label="Department"
-                                    value={adminData.department}
-                                    onChange={(e) => setAdminData({...adminData, department: e.target.value})}
-                                />
-                            ) : (
-                                <div>
-                                    <label className="text-xs font-medium text-gray-500 block mb-2">Department</label>
-                                    <p className="text-gray-900 font-medium">{adminData.department}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="text-xs font-medium text-gray-500 block mb-2">Role</label>
-                            <p className="text-gray-900 font-medium">{adminData.role}</p>
-                        </div>
+                        
                     </div>
 
                     {isEditing && (
                         <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-                            <button
-                                onClick={() => setIsEditing(false)}
-                                className="px-6 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                Cancel
-                            </button>
+                            
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}

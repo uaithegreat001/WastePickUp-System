@@ -1,8 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+﻿import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import CreateAccount from "../pages/user/CreateAccount";
-import TermsPrivacy from "../components/common/TermsPrivacy";
 
 // User pages
 import UserDashboard from "../pages/user/UserDashboard";
@@ -14,8 +13,6 @@ import UserMessage from "../pages/user/UserMessage";
 // Admin pages
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import Users from "../pages/admin/Users";
-import PickupRequests from "../pages/admin/PickupRequests";
-import BinOrders from "../pages/admin/BinOrders";
 import Payments from "../pages/admin/Payments";
 import UsersMessages from "../pages/admin/UsersMessages";
 import AdminProfile from "../pages/admin/AdminProfile";
@@ -31,7 +28,7 @@ export default function AppRoutes() {
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/admin/login" element={<Login role="admin" />} />
         <Route path="/createaccount" element={<CreateAccount />} />
-        <Route path="/termsprivacy" element={<TermsPrivacy />} />
+       
 
         {/* User */}
         <Route path="/dashboard" element={<UserDashboard />} />
@@ -45,8 +42,6 @@ export default function AppRoutes() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<Users />} />
-        <Route path="/admin/pickup-requests" element={<PickupRequests />} />
-        <Route path="/admin/bin-orders" element={<BinOrders />} />
         <Route path="/admin/payments" element={<Payments />} />
         <Route path="/admin/support" element={<UsersMessages />} />
         <Route path="/admin/profile" element={<AdminProfile />} />

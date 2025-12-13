@@ -89,8 +89,8 @@ export default function Settings() {
             <div className="max-w-4xl space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Settings</h1>
-                    <p className="text-xs text-gray-500 mt-1">Manage system-wide configurations and pricing</p>
+                    <h1 className="text-md font-medium text-gray-900">Settings</h1>
+
                 </div>
 
                 <SuccessBox 
@@ -102,24 +102,21 @@ export default function Settings() {
 
 
 
-                {/* Pickup Pricing */}
+                {/* Pickup Pricing container*/}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
-                            <Icon icon="hugeicons:truck-02" className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Pickup Service Pricing</h2>
-                            <p className="text-xs text-gray-500">Set prices for waste pickup based on bin size</p>
-                        </div>
+                        
+                            <h2 className="text-sm font-medium text-gray-700">Pickup Service Pricing</h2>
+                     
+                    
                     </div>
 
                     <div className="space-y-4">
                         {pickupPrices.map((item, index) => (
-                            <div key={item.value} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
+                            <div key={item.value} className="flex items-center justify-between p-2 border border-gray-100 rounded-lg">
                                 <div className="flex items-center gap-3">
-                                    <Icon icon="hugeicons:waste" className="w-5 h-5 text-gray-400" />
-                                    <span className="text-sm font-medium text-gray-900">{item.label}</span>
+                                    <Icon icon="hugeicons:clean" className="w-5 h-5 text-gray-400" />
+                                    <span className="text-sm font-medium text-gray-500">{item.label}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-gray-500">₦</span>
@@ -135,24 +132,22 @@ export default function Settings() {
                     </div>
                 </div>
 
-                {/* Bin Order Pricing */}
+                {/* Bin Order Pricing container*/}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center">
-                            <Icon icon="hugeicons:package" className="w-5 h-5 text-purple-600" />
-                        </div>
+                       
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Bin Order Pricing</h2>
-                            <p className="text-xs text-gray-500">Set prices for purchasing new waste bins</p>
+                            <h2 className="text-sm font-medium text-gray-700">Bin Order Service Pricing</h2>
+                           
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         {orderPrices.map((item, index) => (
-                            <div key={item.value} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
+                            <div key={item.value} className="flex items-center justify-between p-2 border border-gray-100 rounded-lg">
                                 <div className="flex items-center gap-3">
                                     <Icon icon="hugeicons:waste" className="w-5 h-5 text-gray-400" />
-                                    <span className="text-sm font-medium text-gray-900">{item.label}</span>
+                                    <span className="text-sm font-medium text-gray-500">{item.label}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-gray-500">₦</span>
