@@ -1,7 +1,7 @@
 ﻿import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
-import CreateAccount from "../pages/user/CreateAccount";
+import CreateAccount from "../pages/auth/CreateAccount";
 
 // User pages
 import UserDashboard from "../pages/user/UserDashboard";
@@ -28,7 +28,6 @@ export default function AppRoutes() {
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/admin/login" element={<Login role="admin" />} />
         <Route path="/createaccount" element={<CreateAccount />} />
-       
 
         {/* User */}
         <Route path="/dashboard" element={<UserDashboard />} />
@@ -40,7 +39,7 @@ export default function AppRoutes() {
 
         {/* Admin */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+
         <Route path="/admin/users" element={<Users />} />
         <Route path="/admin/payments" element={<Payments />} />
         <Route path="/admin/support" element={<UsersMessages />} />

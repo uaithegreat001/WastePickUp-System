@@ -3,10 +3,9 @@ import { useAuth } from "../../context/AuthContext";
 import UserLayout from "../../components/layouts/UserLayout";
 import ServiceForm from "../../components/user/ServiceForm";
 import { userService } from "../../services/userService";
-import SuccessBox from "../../components/common/SuccessBox";
+import toast from "react-hot-toast";
 
 export default function RequestPickup() {
-  const [showSuccess, setShowSuccess] = useState(false);
   const { userData, currentUser } = useAuth();
 
   const user = userData || {
@@ -27,11 +26,10 @@ export default function RequestPickup() {
 
       await userService.createPickupRequest(completeData);
 
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 5000);
+      toast.success("Pickup requested successfully!");
     } catch (error) {
       console.error("Failed to submit pickup request:", error);
-      alert("Failed to submit request. Please try again.");
+      toast.error("Failed to submit request. Please try again.");
     }
   };
 
@@ -40,18 +38,10 @@ export default function RequestPickup() {
       <div className="max-w-4xl space-y-6">
         <div>
           <h1 className="text-md font-medium text-gray-900">Request Pickup</h1>
-
         </div>
 
         <ServiceForm type="pickup" onSubmit={handleSubmit} userData={user} />
       </div>
-
-      <SuccessBox
-        show={showSuccess}
-        onClose={() => setShowSuccess(false)}
-        title="Request Submitted Successfully!"
-        message="Your pickup request has been submitted"
-      />
     </UserLayout>
   );
 }

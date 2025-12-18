@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { PaystackButton } from "react-paystack";
 import axios from "axios";
-import { FormInput, FormSelect } from "../common/FormInput";
+import { FormInput, FormSelect } from "../reusable/FormInput";
 import { SERVICE_AREAS } from "../../lib/constants";
 import { adminService } from "../../services/adminService";
+import toast from "react-hot-toast";
 
 // Default pricing (used as a fallback)
 const DEFAULT_ORDER_PRICES = [
@@ -110,58 +111,61 @@ export default function ServiceForm({ type, onSubmit, userData }) {
     return Object.keys(errs).length === 0;
   };
 
-  // Payment configuration
-  const [paystackConfig, setPaystackConfig] = useState(null);
-
   const handlePaystackSuccess = async (reference) => {
     setSubmitting(true);
+    const toastId = toast.loading("Verifying payment...");
+
     try {
-      // 1. Verify payment on backend
-      const verifyResponse = await axios.post(
-        "http://localhost:3000/verify-payment",
-        {
-          reference: reference.reference,
-          email: userData?.email || form.contactPhone || "unknown@user.com",
-          amount: total,
-        }
-      );
-
-      if (verifyResponse.data.success) {
-        // 2. If verified, Save to DB
-        const area = SERVICE_AREAS.find((a) => a.zipcode === form.serviceArea);
-        const phone = form.contactPhone.trim() || userData?.phone || "";
-
-        const data = {
-          [isOrder ? "deliveryAddress" : "pickupAddress"]: form.address,
-          zipcode: area?.zipcode || "",
-          lga: area?.lga || "",
-          contactPhone: phone,
-          quantity: form.quantity,
-          binSize: form.binSize,
-          amount: total,
-          paymentStatus: "paid", // CONFIRMED PAID
-          paymentReference: reference.reference,
-          ...(isOrder && form.notes && { notes: form.notes }),
-        };
-
-        await onSubmit(data);
-
-        // Reset form only after successful save
-        setForm({
-          address: "",
-          serviceArea: "",
-          contactPhone: "",
-          quantity: 1,
-          binSize: "",
-          notes: "",
-        });
-        setTotal(0);
-      } else {
-        alert("Payment verification failed. Please contact support.");
+      const res = await axios.post(import.meta.env.VITE_VERIFY_PAYMENT_URL, {
+        reference: reference.reference,
+        email: userData?.email,
+        amount: Math.round(total * 100), // ALWAYS kobo, integer
+        type: isOrder ? "order" : "pickup",
+        // Validating payment before saving order, so no ID yet.
+      });
+      if (!res.data.success) {
+        throw new Error("Verification failed");
       }
+
+      // Save request ONLY after verification
+      const area = SERVICE_AREAS.find((a) => a.zipcode === form.serviceArea);
+
+      await onSubmit({
+        [isOrder ? "deliveryAddress" : "pickupAddress"]: form.address,
+        zipcode: area?.zipcode || "",
+        lga: area?.lga || "",
+        contactPhone: form.contactPhone || userData?.phone || "",
+        quantity: form.quantity,
+        binSize: form.binSize,
+        amount: total,
+        paymentStatus: "verified",
+        paymentReference: reference.reference,
+      });
+
+      toast.success("Payment verified and request submitted", {
+        id: toastId,
+      });
+
+      setForm({
+        address: "",
+        serviceArea: "",
+        contactPhone: "",
+        quantity: 1,
+        binSize: "",
+      });
+      setTotal(0);
     } catch (err) {
-      console.error("Payment/Save Error:", err);
-      alert("An error occurred during payment verification.");
+      console.error(err);
+
+      if (err.response?.status === 404) {
+        toast.error("Payment verification service not found", {
+          id: toastId,
+        });
+      } else {
+        toast.error("Payment verification failed", {
+          id: toastId,
+        });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -179,19 +183,6 @@ export default function ServiceForm({ type, onSubmit, userData }) {
     publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    // Check if user wants to proceed to payment
-    // We can't trigger Paystack hook programmatically easily without a button click usually,
-    // but we can render the PaystackButton as the submit button.
-    // However, we need to validate first.
-    // simpler approach: The "Proceed to Payment" button IS the PaystackButton,
-    // but maybe disabled until valid? Or we wrap it.
-    // Let's use the PaystackButton component directly for simplicity as requested.
-  };
-
   const selectedBin = prices.find((b) => b.value === form.binSize);
 
   return (
@@ -201,7 +192,10 @@ export default function ServiceForm({ type, onSubmit, userData }) {
         <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="flex items-center gap-2">
-              <Icon icon="hugeicons:user-03" className="w-4 h-4 text-gray-400" />
+              <Icon
+                icon="hugeicons:user-03"
+                className="w-4 h-4 text-gray-400"
+              />
               <span className="text-sm font-medium text-gray-900">
                 {userData.fullName}
               </span>
@@ -214,7 +208,10 @@ export default function ServiceForm({ type, onSubmit, userData }) {
               <span className="text-sm text-gray-600">{userData.email}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Icon icon="hugeicons:call-02" className="w-4 h-4 text-gray-400" />
+              <Icon
+                icon="hugeicons:call-02"
+                className="w-4 h-4 text-gray-400"
+              />
               <span className="text-sm text-gray-600">{userData.phone}</span>
             </div>
           </div>
@@ -256,7 +253,6 @@ export default function ServiceForm({ type, onSubmit, userData }) {
               onChange={(e) => updateField("contactPhone", e.target.value)}
               error={errors.contactPhone}
               placeholder={userData?.phone || "Enter contact phone"}
-             
             />
           </div>
         </div>
@@ -346,7 +342,6 @@ export default function ServiceForm({ type, onSubmit, userData }) {
 
         {/* Payment actions */}
         <div className="flex items-center justify-end pt-4 border-t border-gray-200">
-        
           {form.address && form.serviceArea && form.binSize && total > 0 ? (
             <PaystackButton
               className="px-6 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors flex items-center gap-2"
@@ -359,7 +354,7 @@ export default function ServiceForm({ type, onSubmit, userData }) {
             <button
               type="button"
               disabled={true}
-              className="px-6 py-2 text-sm font-medium text-white bg-gray-300 rounded-lg cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-2 text-sm font-medium text-white disabled:bg-gray-300 rounded-lg cursor-not-allowed flex items-center gap-2"
             >
               Proceed to Payment
             </button>

@@ -4,12 +4,12 @@ import UserLayout from "../../components/layouts/UserLayout";
 import { Icon } from "@iconify/react";
 import { userService } from "../../services/userService";
 import { SERVICE_AREAS } from "../../lib/constants";
-import SuccessBox from "../../components/common/SuccessBox";
+import toast from "react-hot-toast";
 import {
   FormInput,
   FormSelect,
   FormTextarea,
-} from "../../components/common/FormInput";
+} from "../../components/reusable/FormInput";
 
 export default function UserProfile() {
   const { userData, currentUser } = useAuth();
@@ -42,11 +42,8 @@ export default function UserProfile() {
       });
     }
   }, [userData]);
-  {
-    /*Edit profile */
-  }
+
   const [isEditing, setIsEditing] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -68,13 +65,10 @@ export default function UserProfile() {
       });
 
       setIsEditing(false);
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, 1000);
+      toast.success("Profile Updated!");
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -85,7 +79,6 @@ export default function UserProfile() {
       <div className="max-w-3xl space-y-6">
         <div>
           <h1 className="text-md font-medium text-gray-900">My Profile</h1>
-         
         </div>
 
         {/* Profile Card */}
@@ -99,7 +92,6 @@ export default function UserProfile() {
                 <h2 className="text-xl font-bold text-gray-900">
                   {profileData.fullName}
                 </h2>
-                <p className="text-sm text-gray-500">Customer</p>
               </div>
             </div>
             <button
@@ -243,13 +235,6 @@ export default function UserProfile() {
           )}
         </div>
       </div>
-
-      <SuccessBox
-        show={showSuccess}
-        onClose={() => setShowSuccess(false)}
-        title="Profile Updated!"
-        message="Your profile has been updated successfully."
-      />
     </UserLayout>
   );
 }

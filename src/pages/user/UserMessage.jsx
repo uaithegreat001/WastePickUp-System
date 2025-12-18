@@ -3,8 +3,8 @@ import { useAuth } from "../../context/AuthContext";
 import UserLayout from "../../components/layouts/UserLayout";
 import { Icon } from "@iconify/react";
 import { userService } from "../../services/userService";
-import { FormInput, FormTextarea } from "../../components/common/FormInput";
-import SuccessBox from "../../components/common/SuccessBox";
+import { FormInput, FormTextarea } from "../../components/reusable/FormInput";
+import toast from "react-hot-toast";
 
 export default function UserMessage() {
   const { userData, currentUser } = useAuth();
@@ -19,7 +19,6 @@ export default function UserMessage() {
     message: "",
   });
   const [errors, setErrors] = useState({});
-  const [showSuccess, setShowSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const validate = () => {
@@ -44,9 +43,10 @@ export default function UserMessage() {
       });
 
       setFormData({ subject: "", message: "" });
-      setShowSuccess(true);
+      toast.success("Message sent successfully!");
     } catch (error) {
       console.error("Error submitting message:", error);
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -65,15 +65,7 @@ export default function UserMessage() {
         {/* Header */}
         <div>
           <h1 className="text-md font-medium text-gray-900">Send Message</h1>
-          
         </div>
-
-        <SuccessBox
-          show={showSuccess}
-          onClose={() => setShowSuccess(false)}
-          title="Message Sent!"
-          message="Your message has been sent."
-        />
 
         {/* Message Form */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -99,19 +91,13 @@ export default function UserMessage() {
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
               <button
-                type="button"
-                onClick={() => {
-                  setFormData({ subject: "", message: "" });
-                  setErrors({});
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Reset
-              </button>
-              <button
                 type="submit"
-                disabled={submitting}
-                className="px-6 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                disabled={
+                  submitting ||
+                  !formData.subject.trim() ||
+                  !formData.message.trim()
+                }
+                className="px-6 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {submitting ? (
                   <>

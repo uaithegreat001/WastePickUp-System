@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import StatusBadge from "./StatusBadge";
+import StatusBadge from "../../components/reusable/StatusBadge";
 import { formatDate, formatDateForInput } from "../../lib/dateUtils";
+import toast from "react-hot-toast";
 
 const DRIVERS = [
-  { id: "d1", name: "John Smith" },
-  { id: "d2", name: "David Wilson" },
-  { id: "d3", name: "Michael Brown" },
-  { id: "d4", name: "Sarah Davis" },
-  { id: "d5", name: "James Miller" },
+  { id: "d1", name: "Sani Isah" },
+  { id: "d2", name: "Mohd Lawan" },
+  { id: "d3", name: "Abubakar Abba" },
+  { id: "d4", name: "Aliyu Yunus" },
 ];
 
 export default function AdminDetailBox({
@@ -27,8 +27,6 @@ export default function AdminDetailBox({
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const [errorPopup, setErrorPopup] = useState(null);
-
   useEffect(() => {
     if (data) {
       setForm({
@@ -38,7 +36,6 @@ export default function AdminDetailBox({
         scheduledTime: data.scheduledTime || "",
         driver: data.driver || "",
       });
-      setErrorPopup(null);
     }
   }, [data]);
 
@@ -51,24 +48,34 @@ export default function AdminDetailBox({
   };
 
   const handleSubmit = async () => {
-    if (!form.scheduledDate || !form.scheduledTime) {
-      setErrorPopup("Please select both a date and time for the schedule.");
-      setTimeout(() => setErrorPopup(null), 3000);
-      return;
-    }
+  if (!form.scheduledDate || !form.scheduledTime) {
+    toast.error("Please select both a date and time for the schedule.");
+    return;
+  }
 
-    setSubmitting(true);
-    try {
-      await onSubmit(data.id, form);
-      onClose();
-    } catch (error) {
-      console.error("Error updating schedule:", error);
-      setErrorPopup("Failed to send schedule. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  setSubmitting(true);
 
+  try {
+    await onSubmit(data.id, {
+      date: new Date(
+        `${form.scheduledDate}T${form.scheduledTime}`
+      ).toISOString(),
+      driverName: form.driver,
+      userEmail: data.userEmail,
+    });
+
+    toast.success(
+      `Schedule sent successfully to ${data.userEmail || "user"}!`
+    );
+
+    onClose();
+  } catch (error) {
+    console.error("Error updating schedule:", error);
+    toast.error("Failed to send schedule. Please try again.");
+  } finally {
+    setSubmitting(false);
+  }
+};
   if (!data || !show) return null;
 
   const isScheduled = !!data.scheduledDate;
@@ -84,21 +91,6 @@ export default function AdminDetailBox({
                 .fade-in { animation: fadeIn 0.3s ease-in-out; }
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
-
-      {errorPopup && (
-        <div className="absolute top-10 left-1/2 transform -translate-x-1/2 z-[60] fade-in">
-          <div className="bg-red-50 text-red-700 px-6 py-3 rounded-xl shadow-lg border border-red-100 flex items-center gap-3">
-            <Icon icon="hugeicons:alert-02" className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm font-medium">{errorPopup}</span>
-            <button
-              onClick={() => setErrorPopup(null)}
-              className="ml-2 hover:bg-red-100 rounded-full p-1 transition-colors"
-            >
-              <Icon icon="hugeicons:cancel-01" className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto hide-scrollbar shadow-2xl flex flex-col relative">
         <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -213,7 +205,7 @@ export default function AdminDetailBox({
                     Total Amount
                   </label>
                   <p className="text-xl font-bold text-primary">
-                    ?{(data.amount || 0).toLocaleString()}
+                    ₦{(data.amount || 0).toLocaleString()}
                   </p>
                 </div>
                 {data.notes && (
@@ -319,7 +311,9 @@ export default function AdminDetailBox({
               ) : (
                 <button
                   onClick={handleSubmit}
-                  disabled={submitting}
+                  disabled={
+                    submitting || !form.scheduledDate || !form.scheduledTime
+                  }
                   className="px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {submitting ? (

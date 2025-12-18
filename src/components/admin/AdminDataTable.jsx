@@ -1,7 +1,6 @@
 import React from "react";
-import { Icon } from "@iconify/react";
-import StatusBadge from "./StatusBadge";
-import { formatDate, toDate, isToday, isYesterday } from "../../lib/dateUtils";
+import StatusBadge from "../reusable/StatusBadge";
+import { toDate, isToday, isYesterday } from "../../lib/dateUtils";
 
 export default function AdminDataTable({ type, data = [], onViewDetails }) {
   const isPickup = type === "pickups";
@@ -69,57 +68,59 @@ export default function AdminDataTable({ type, data = [], onViewDetails }) {
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="p-6 space-y-8">
-        {Object.keys(grouped.today).length > 0 && (
-          <div className="space-y-6">
-            <DateDivider label="Today" />
-            {Object.entries(grouped.today).map(([zip, items]) => (
-              <ZipGroup
-                key={`today-${zip}`}
-                zipcode={zip}
-                items={items}
-                isPickup={isPickup}
-                formatDate={formatDate}
-                isUnscheduled={isUnscheduled}
-                onViewDetails={onViewDetails}
-              />
-            ))}
-          </div>
-        )}
+      <div className="overflow-x-auto">
+        <div className="p-6 space-y-8 min-w-[800px]">
+          {Object.keys(grouped.today).length > 0 && (
+            <div className="space-y-6">
+              <DateDivider label="Today" />
+              {Object.entries(grouped.today).map(([zip, items]) => (
+                <ZipGroup
+                  key={`today-${zip}`}
+                  zipcode={zip}
+                  items={items}
+                  isPickup={isPickup}
+                  formatDate={formatDate}
+                  isUnscheduled={isUnscheduled}
+                  onViewDetails={onViewDetails}
+                />
+              ))}
+            </div>
+          )}
 
-        {Object.keys(grouped.yesterday).length > 0 && (
-          <div className="space-y-6">
-            <DateDivider label="Yesterday" />
-            {Object.entries(grouped.yesterday).map(([zip, items]) => (
-              <ZipGroup
-                key={`yest-${zip}`}
-                zipcode={zip}
-                items={items}
-                isPickup={isPickup}
-                formatDate={formatDate}
-                isUnscheduled={isUnscheduled}
-                onViewDetails={onViewDetails}
-              />
-            ))}
-          </div>
-        )}
+          {Object.keys(grouped.yesterday).length > 0 && (
+            <div className="space-y-6">
+              <DateDivider label="Yesterday" />
+              {Object.entries(grouped.yesterday).map(([zip, items]) => (
+                <ZipGroup
+                  key={`yest-${zip}`}
+                  zipcode={zip}
+                  items={items}
+                  isPickup={isPickup}
+                  formatDate={formatDate}
+                  isUnscheduled={isUnscheduled}
+                  onViewDetails={onViewDetails}
+                />
+              ))}
+            </div>
+          )}
 
-        {Object.entries(grouped.older).map(([date, zipGroups]) => (
-          <div key={date} className="space-y-6">
-            <DateDivider label={date} />
-            {Object.entries(zipGroups).map(([zip, items]) => (
-              <ZipGroup
-                key={`${date}-${zip}`}
-                zipcode={zip}
-                items={items}
-                isPickup={isPickup}
-                formatDate={formatDate}
-                isUnscheduled={isUnscheduled}
-                onViewDetails={onViewDetails}
-              />
-            ))}
-          </div>
-        ))}
+          {Object.entries(grouped.older).map(([date, zipGroups]) => (
+            <div key={date} className="space-y-6">
+              <DateDivider label={date} />
+              {Object.entries(zipGroups).map(([zip, items]) => (
+                <ZipGroup
+                  key={`${date}-${zip}`}
+                  zipcode={zip}
+                  items={items}
+                  isPickup={isPickup}
+                  formatDate={formatDate}
+                  isUnscheduled={isUnscheduled}
+                  onViewDetails={onViewDetails}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -4,22 +4,16 @@ import { Link } from "react-router-dom";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../../lib/firebase.js";
 import Logo from "../../assets/Logo-Transparent.png";
-import SuccessBox from "../../components/common/SuccessBox";
-import ErrorBox from "../../components/common/ErrorBox";
-import LoadingBox from "../../components/common/LoadingBox.jsx";
-import { FormInput } from "../../components/common/FormInput";
+import toast from "react-hot-toast";
+import { FormInput } from "../../components/reusable/FormInput";
 
 export default function ForgotPassword() {
   // States
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showError, setShowError] = useState(false);
-  const [popupMessage, setPopupMessage] = useState("");
-  const [loading, setLoading] = useState(false);
 
   // Email pattern validation (same as Login/CreateAccount)
-  const emailRegex = /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.com$/i;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   // Email validation
   const handleEmailError = (value) => {
@@ -34,9 +28,6 @@ export default function ForgotPassword() {
   // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setShowSuccess(false);
-    setShowError(false);
-    setPopupMessage("");
 
     let hasError = false;
     if (!email) {
@@ -46,37 +37,24 @@ export default function ForgotPassword() {
     if (emailError || hasError) return;
 
     try {
-      setLoading(true);
       await sendPasswordResetEmail(auth, email, {
-         // Redirect back to your app after reset
-      url: window.location.origin + "/login",
-      handleCodeInApp: false // ✅ Let Firebase use its default reset page
-
+        // Redirect back to your app after reset
+        url: window.location.origin + "/login",
+        handleCodeInApp: false, // ✅ Let Firebase use its default reset page
       });
-     
-      setLoading(false);
 
-      setPopupMessage("Password reset link sent to your email!");
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 4000);
+      toast.success("Password reset link sent to your email!");
     } catch (error) {
-      setLoading(false);
       if (error.code === "auth/user-not-found") {
-        setPopupMessage("Account not found please create one");
+        toast.error("Account not found please create one");
       } else {
-        setPopupMessage("Oops, network error please try again");
+        toast.error("Oops, network error please try again");
       }
-      setShowError(true);
-      setTimeout(() => setShowError(false), 4000);
     }
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center px-2 sm:px-4 relative">
-      <LoadingBox show={loading} message="Sending reset link..." />
-      <SuccessBox show={showSuccess} message={popupMessage} onClose={() => setShowSuccess(false)} />
-      <ErrorBox show={showError} message={popupMessage} onClose={() => setShowError(false)} />
-
       {/* Main Form Card */}
       <form
         onSubmit={handleSubmit}
@@ -84,7 +62,11 @@ export default function ForgotPassword() {
         noValidate
       >
         <div className="flex mb-4 flex-col mx-auto items-center">
-          <img src={Logo} alt="Wastepickup logo" className="w-24 sm:w-32 md:w-36 h-auto" />
+          <img
+            src={Logo}
+            alt="Wastepickup logo"
+            className="w-24 sm:w-32 md:w-36 h-auto"
+          />
           <p className="text-xs sm:text-sm text-gray-400 mb-4 text-center">
             Clean homes, Stay hygienic
           </p>

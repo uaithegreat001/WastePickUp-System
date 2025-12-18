@@ -20,7 +20,7 @@ app.use(express.json());
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
   });
 } else {
   // Fallback (might work locally if you ran 'firebase login')
@@ -41,17 +41,20 @@ async function sendEmail(to, subject, htmlContent) {
     await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       {
-        sender: { name: "WastePickUp System", email: "no-reply@wastepickup.com" },
+        sender: {
+          name: "WastePickUp System",
+          email: "no-reply@wastepickup.com",
+        },
         to: [{ email: to }],
         subject: subject,
-        htmlContent: htmlContent
+        htmlContent: htmlContent,
       },
       {
         headers: {
           "api-key": BREVO_API_KEY,
           "Content-Type": "application/json",
-          "Accept": "application/json"
-        }
+          Accept: "application/json",
+        },
       }
     );
     console.log(`Email sent to ${to}`);
@@ -64,46 +67,87 @@ async function sendEmail(to, subject, htmlContent) {
 // 1. VERIFY PAYMENT & UPDATE DB
 // =====================================================
 app.post("/verify-payment", async (req, res) => {
-  const { reference, email, amount, type, id } = req.body; // type='pickup' or 'order', id=documentID
+  const { reference, email, amount, type, id } = req.body;
+  // amount MUST be in kobo from frontend
 
-  if (!reference || !email) return res.status(400).send("Missing data");
+  if (!reference || !email || !amount) {
+    return res.status(400).json({ error: "Missing required data" });
+  }
 
   try {
     // A. Verify with Paystack
-    const verifyRes = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
-    });
+    const verifyRes = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
 
-    if (verifyRes.data.data.status !== "success") {
-      return res.status(400).json({ error: "Payment verification failed" });
+    const data = verifyRes.data?.data;
+
+    if (!data || data.status !== "success") {
+      console.error(
+        "Paystack verification failed:",
+        data?.gateway_response || "Unknown",
+        data?.status
+      );
+      return res
+        .status(400)
+        .json({
+          error: `Payment failed: ${
+            data?.gateway_response || "Status not success"
+          }`,
+        });
     }
 
-    // B. Update Firebase (Mark as Paid)
+    // B. Amount validation (CRITICAL)
+    // Paystack returns amount in kobo. Input `amount` is also in kobo.
+    // Ensure strict comparison
+    if (Number(data.amount) !== Number(amount)) {
+      console.error(
+        `Amount mismatch! Paystack: ${data.amount}, Expected: ${amount}`
+      );
+      return res
+        .status(400)
+        .json({
+          error: `Amount mismatch: Paid ${data.amount}, Expected ${amount}`,
+        });
+    }
+
+    // C. Update Firebase (only if ID + type provided)
     if (id && type) {
-      const collectionName = type === 'order' ? 'binOrders' : 'pickupRequests';
+      const collectionName = type === "order" ? "binOrders" : "pickupRequests";
+
       await db.collection(collectionName).doc(id).update({
-        status: 'paid', // Or 'pending' -> 'collected'? Adjust status as per your flow
-        paymentStatus: 'paid',
+        status: "paid",
+        paymentStatus: "paid",
         paymentReference: reference,
-        paidAt: admin.firestore.FieldValue.serverTimestamp()
+        paidAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-      console.log(`Updated ${type} ${id} to paid`);
+
+      console.log(`Updated ${collectionName}/${id} as paid`);
     }
 
-    // C. Send Receipt Email
+    // D. Send Receipt Email (AFTER verification)
     await sendEmail(
       email,
       "Payment Receipt - WastePickUp",
       `<h1>Payment Successful</h1>
        <p>We received <b>₦${(amount / 100).toLocaleString()}</b>.</p>
-       <p>Ref: ${reference}</p>`
+       <p>Reference: ${reference}</p>`
     );
 
-    res.json({ success: true, message: "Verified and Updated" });
-
+    return res.json({
+      success: true,
+      status: "verified",
+    });
   } catch (error) {
-    console.error("Payment Error:", error.message);
-    res.status(500).json({ error: error.message });
+    console.error("Payment Error:", error);
+    return res.status(500).json({
+      error: "Payment verification failed",
+    });
   }
 });
 
@@ -115,23 +159,37 @@ app.post("/schedule-pickup", async (req, res) => {
 
   try {
     // A. Update DB
-    const collectionName = type === 'order' ? 'binOrders' : 'pickupRequests';
+    const collectionName = type === "order" ? "binOrders" : "pickupRequests";
     await db.collection(collectionName).doc(id).update({
-      status: 'scheduled',
+      status: "scheduled",
       scheduledDate: date,
       driverName: driverName,
-      scheduledAt: admin.firestore.FieldValue.serverTimestamp()
+      scheduledAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     // B. Send Email
-    await sendEmail(
-      userEmail,
-      "Pickup Scheduled!",
-      `<h1>Your Pickup is Set</h1>
-       <p>Date: ${new Date(date).toDateString()}</p>
-       <p>Driver: ${driverName}</p>
-       <p>Please be ready!</p>`
-    );
+    try {
+      await sendEmail(
+        userEmail,
+        "Pickup Scheduled!",
+        `<h1>Your Pickup has been Scheduled!</h1>
+         <p>Hello,</p>
+         <p>Your waste pickup has been scheduled by our admin.</p>
+         <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+           <p><strong>Date:</strong> ${new Date(date).toLocaleDateString()}</p>
+           <p><strong>Time:</strong> ${new Date(date).toLocaleTimeString([], {
+             hour: "2-digit",
+             minute: "2-digit",
+           })}</p>
+           <p><strong>Driver Name:</strong> ${driverName}</p>
+         </div>
+         <p>Please be available and ensure your bin is accessible.</p>`
+      );
+    } catch (emailError) {
+      console.error("Failed to send schedule email:", emailError);
+      // Optionally, you could return an error here if email is critical
+      // return res.status(500).json({ error: "Schedule updated but email failed" });
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -142,15 +200,15 @@ app.post("/schedule-pickup", async (req, res) => {
 // =====================================================
 // 3. ADMIN REPLY MESSAGE
 // =====================================================
-app.post("/reply-message", async (req, res) => {
+app.post("/admin/reply-message", async (req, res) => {
   const { id, reply, userEmail } = req.body;
 
   try {
     // A. Update DB
-    await db.collection('supportTickets').doc(id).update({
-      status: 'resolved',
+    await db.collection("supportTickets").doc(id).update({
+      status: "resolved",
       adminResponse: reply,
-      respondedAt: admin.firestore.FieldValue.serverTimestamp()
+      respondedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     // B. Send Email

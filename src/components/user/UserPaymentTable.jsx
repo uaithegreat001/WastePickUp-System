@@ -1,6 +1,5 @@
 import React from "react";
-import { Icon } from "@iconify/react";
-import StatusBadge from "../admin/StatusBadge";
+import StatusBadge from "../reusable/StatusBadge";
 import { formatDate } from "../../lib/dateUtils";
 
 // Displays payment history from pickups and orders
@@ -74,7 +73,6 @@ function PaymentRow({ item, formatDate, onViewDetails }) {
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         <div className="flex items-center gap-2">
-        
           <span className="text-sm text-gray-700">
             {isPickup ? "Pickup" : "Order"}
           </span>
@@ -89,7 +87,7 @@ function PaymentRow({ item, formatDate, onViewDetails }) {
         ₦{item.amount?.toLocaleString() || "0"}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <StatusBadge status={item.status} size="small" />
+        <StatusBadge status="paid" size="small" />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
         <button

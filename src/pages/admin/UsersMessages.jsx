@@ -2,17 +2,15 @@ import React, { useState, useEffect } from "react";
 import AdminLayout from "../../components/layouts/AdminLayout";
 import { adminService } from "../../services/adminService";
 import { Icon } from "@iconify/react";
-import SuccessBox from "../../components/common/SuccessBox";
+import toast from "react-hot-toast";
 import axios from "axios";
 
 export default function UsersMessages() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [expandedId, setExpandedId] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     fetchMessages();
@@ -47,45 +45,30 @@ export default function UsersMessages() {
     if (!replyText.trim()) return;
 
     setSendingReply(true);
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
     try {
-      await axios.post("http://localhost:3000/reply-message", {
+      await axios.post(`${API_URL}/admin/reply-message`, {
         id: msg.id,
         reply: replyText,
         userEmail: msg.email,
       });
 
-      setShowSuccess(true);
       setReplyText("");
       setExpandedId(null);
       fetchMessages();
+      toast.success("Reply successfully sent!");
     } catch (error) {
       console.error("Error sending reply:", error);
-      alert("Failed to send reply. Please ensure backend is accessible.");
+      toast.error("Failed to send reply. Please ensure backend is accessible.");
     } finally {
       setSendingReply(false);
     }
   };
 
-  const filteredMessages = messages.filter(
-    (msg) =>
-      (msg.subject &&
-        msg.subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (msg.email &&
-        msg.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (msg.message &&
-        msg.message.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
   return (
     <AdminLayout title="Support Messages">
       <div className="space-y-6 max-w-5xl mx-auto">
-        <SuccessBox
-          show={showSuccess}
-          onClose={() => setShowSuccess(false)}
-          title="Reply Sent"
-          message="The user has been notified via email."
-        />
-
         <h1 className="text-md font-medium text-gray-900">
           Messages{" "}
           <span className="text-gray-400 text-sm font-normal ml-2">
@@ -94,12 +77,7 @@ export default function UsersMessages() {
         </h1>
 
         <div className="space-y-4">
-          {loading ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              Loading messages...
-            </div>
-          ) : filteredMessages.length === 0 ? (
+          {messages.length === 0 && !loading ? (
             <div className="text-center py-12 bg-white rounded-xl border border-gray-200 shadow-sm">
               <Icon
                 icon="hugeicons:mail-02"
@@ -108,7 +86,7 @@ export default function UsersMessages() {
               <p className="text-gray-500">No messages found</p>
             </div>
           ) : (
-            filteredMessages.map((msg) => {
+            messages.map((msg) => {
               const isExpanded = expandedId === msg.id;
 
               return (
@@ -131,7 +109,11 @@ export default function UsersMessages() {
                         </h3>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <span className="text-xs text-gray-400 whitespace-nowrap">
-                            {new Date(msg.createdAt).toLocaleDateString()} {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(msg.createdAt).toLocaleDateString()}{" "}
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </span>
                           <button
                             className={`text-xs font-medium transition-colors ${
@@ -140,7 +122,7 @@ export default function UsersMessages() {
                                 : "text-primary hover:text-primary-hover"
                             }`}
                           >
-                            Read more
+                            View More
                           </button>
                         </div>
                       </div>
@@ -206,9 +188,7 @@ export default function UsersMessages() {
                                     Sending...
                                   </>
                                 ) : (
-                                  <>
-                                    Send Reply
-                                  </>
+                                  <>Send Reply</>
                                 )}
                               </button>
                             </div>

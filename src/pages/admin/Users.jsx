@@ -9,17 +9,21 @@ export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await adminService.getUsers();
+    setLoading(true);
+    // Real-time listener
+    const unsubscribe = adminService.subscribeToUsers(
+      (data) => {
         setUsers(data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      } finally {
         setLoading(false);
+      },
+      (error) => {
+        console.error("Subscription error:", error);
+        setLoading(false); // Ensure loading stops even on error
       }
-    };
-    fetchUsers();
+    );
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const filteredUsers = users.filter(
@@ -65,16 +69,7 @@ export default function Users() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr>
-                    <td colSpan="4" className="py-8 text-center text-gray-500">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        Loading users...
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredUsers.length === 0 ? (
+                {filteredUsers.length === 0 && !loading ? (
                   <tr>
                     <td colSpan="4" className="py-8 text-center text-gray-500">
                       No users found.
@@ -111,7 +106,14 @@ export default function Users() {
                       </td>
                       <td className="py-3 px-6 text-sm text-gray-500">
                         {user.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString()
+                          ? `${new Date(
+                              user.createdAt
+                            ).toLocaleDateString()} ${new Date(
+                              user.createdAt
+                            ).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}`
                           : "N/A"}
                       </td>
                     </tr>

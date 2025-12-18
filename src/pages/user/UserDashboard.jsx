@@ -1,28 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import UserLayout from "../../components/layouts/UserLayout";
-import UserStatsCard from "../../components/user/UserStatsCard";
+
 import UserDataTable from "../../components/user/UserDataTable";
 import UserPaymentTable from "../../components/user/UserPaymentTable";
+import UserMessagesTable from "../../components/user/UserMessagesTable";
 import UserDetailBox from "../../components/user/UserDetailBox";
 import { userService } from "../../services/userService";
 
 export default function UserDashboard() {
   const { userData, currentUser } = useAuth();
-
   const user = userData || { fullName: "User", email: "", phone: "" };
-
   const [activeTab, setActiveTab] = useState("pickups");
-  const [stats, setStats] = useState({
-    totalPickups: 0,
-    pendingPickups: 0,
-    completedPickups: 0,
-    totalSpent: 0,
-  });
   const [recentPickups, setRecentPickups] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // for the detail box
   const [selected, setSelected] = useState(null);
@@ -32,21 +24,17 @@ export default function UserDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsData, pickups, orders, supportTickets] = await Promise.all([
-          userService.getUserDashboardStats(currentUser?.uid),
+        const [pickups, orders, supportTickets] = await Promise.all([
           userService.getUserPickupRequests(currentUser?.uid),
           userService.getUserBinOrders(currentUser?.uid),
           userService.getUserSupportTickets(currentUser?.uid),
         ]);
 
-        setStats(statsData);
         setRecentPickups(pickups);
         setRecentOrders(orders);
         setMessages(supportTickets);
       } catch (error) {
         console.error("Failed to load dashboard data", error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -109,8 +97,9 @@ export default function UserDashboard() {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-md font-medium text-gray-900">Dashboard Overview</h1>
-        
+          <h1 className="text-md font-medium text-gray-900">
+            Dashboard Overview
+          </h1>
         </div>
 
         {/* tabs and content */}
@@ -158,11 +147,7 @@ export default function UserDashboard() {
               />
             )}
             {activeTab === "messages" && (
-              <UserDataTable
-                type="messages"
-                data={messages}
-                onViewDetails={(item) => openDetail(item, "message")}
-              />
+              <UserMessagesTable messages={messages} />
             )}
           </div>
         </div>

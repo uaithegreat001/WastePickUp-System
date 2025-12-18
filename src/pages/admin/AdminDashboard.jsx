@@ -16,21 +16,26 @@ export default function AdminDashboard() {
   const [showDetail, setShowDetail] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [pickupsData, ordersData] = await Promise.all([
-          adminService.getPickupRequests(),
-          adminService.getBinOrders(),
-        ]);
-        setPickups(pickupsData);
-        setOrders(ordersData);
-      } catch (error) {
-        console.error("Failed to load dashboard data", error);
-      } finally {
-        setLoading(false);
+    setLoading(true);
+
+    // Subscribe to real-time updates
+    const unsubscribePickups = adminService.subscribeToPickupRequests(
+      (data) => {
+        setPickups(data);
+        // Only set loading to false if we have both or if we handle them independently.
+        // For simplicity, we can let them update state independently.
       }
+    );
+
+    const unsubscribeOrders = adminService.subscribeToBinOrders((data) => {
+      setOrders(data);
+      setLoading(false); // Assume initial load complete when orders arrive (or pickups)
+    });
+
+    return () => {
+      unsubscribePickups();
+      unsubscribeOrders();
     };
-    fetchData();
   }, []);
 
   const openDetail = (item, type) => {
@@ -56,8 +61,8 @@ export default function AdminDashboard() {
         {/* welcome */}
         <div>
           <h1 className="text-md font-medium text-gray-900">
-            Dashboard Overview</h1>
-          
+            Dashboard Overview
+          </h1>
         </div>
 
         {/* tabs and its content */}
@@ -111,9 +116,15 @@ export default function AdminDashboard() {
         onSubmit={async (id, payload) => {
           try {
             if (detailType === "pickup") {
-              await adminService.updatePickupSchedule(id, payload);
+              await adminService.updatePickupSchedule(id, {
+                ...payload,
+                userEmail: selected.userEmail || selected.email,
+              });
             } else {
-              await adminService.updateBinOrderSchedule(id, payload);
+              await adminService.updateBinOrderSchedule(id, {
+                ...payload,
+                userEmail: selected.userEmail || selected.email,
+              });
             }
             const [p, o] = await Promise.all([
               adminService.getPickupRequests(),

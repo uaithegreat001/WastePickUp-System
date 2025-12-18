@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 
 import logo from "../../assets/Logo-Transparent.png";
 
-export default function UserSidebar({ isOpen, toggleSidebar = {} }) {
+export default function UserSidebar({ isOpen }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -21,19 +21,16 @@ export default function UserSidebar({ isOpen, toggleSidebar = {} }) {
       name: "Request Pickup",
       icon: "hugeicons:clean",
       path: "/user/request-pickup",
-     
     },
     {
       name: "Order Bin",
       icon: "hugeicons:waste",
       path: "/user/order-bin",
-      
     },
     {
       name: "Message",
       icon: "hugeicons:align-box-middle-left",
       path: "/user/message",
-     
     },
     {
       name: "Profile",
@@ -80,23 +77,18 @@ export default function UserSidebar({ isOpen, toggleSidebar = {} }) {
                 location.pathname === "/user/dashboard"
               : location.pathname === item.path;
 
-          const count = item.countKey ? counts[item.countKey] : null;
-          const showBadge = count !== null && count !== undefined && count > 0;
-
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              <div className="flex items-center gap-3">
-                <Icon icon={item.icon} className="w-5 h-5" />
-                <span>{item.name}</span>
-              </div>
+              <Icon icon={item.icon} className="w-5 h-5" />
+              <span>{item.name}</span>
             </Link>
           );
         })}

@@ -85,75 +85,7 @@ export const userService = {
         }
     },
 
-    async getUserDashboardStats(userId) {
-        try {
-            const [pickupRequests, binOrders] = await Promise.all([
-                this.getUserPickupRequests(userId),
-                this.getUserBinOrders(userId)
-            ]);
 
-            const totalPickups = pickupRequests.length;
-            const pendingPickups = pickupRequests.filter(r => r.status === 'pending').length;
-            const completedPickups = pickupRequests.filter(r => r.status === 'completed').length;
-            const totalSpent = [...pickupRequests, ...binOrders].reduce((sum, item) => {
-                return sum + (item.amount || 0);
-            }, 0);
-
-            return {
-                totalPickups,
-                pendingPickups,
-                completedPickups,
-                totalSpent
-            };
-        } catch (error) {
-            console.error('Error fetching user dashboard stats:', error);
-            return {
-                totalPickups: 0,
-                pendingPickups: 0,
-                completedPickups: 0,
-                totalSpent: 0
-            };
-        }
-    },
-
-    async getUserRecentActivity(userId, limitCount = 5) {
-        try {
-            const pickupQuery = query(
-                collection(db, 'pickupRequests'),
-                where('userId', '==', userId)
-            );
-
-            const binOrderQuery = query(
-                collection(db, 'binOrders'),
-                where('userId', '==', userId)
-            );
-
-            const [pickupSnapshot, orderSnapshot] = await Promise.all([
-                getDocs(pickupQuery),
-                getDocs(binOrderQuery)
-            ]);
-
-            const pickups = pickupSnapshot.docs.map(doc => ({
-                id: doc.id,
-                type: 'pickup',
-                ...doc.data()
-            }));
-
-            const orders = orderSnapshot.docs.map(doc => ({
-                id: doc.id,
-                type: 'order',
-                ...doc.data()
-            }));
-
-            // Combine and sort by date
-            const allActivity = sortByCreatedAt([...pickups, ...orders]);
-
-            return allActivity.slice(0, limitCount);
-        } catch (error) {
-            console.error('Error fetching user recent activity:', error);
-            return [];
-        }
-    },
 
     async createSupportTicket(ticketData) {
         try {

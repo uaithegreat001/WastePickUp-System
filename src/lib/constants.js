@@ -10,12 +10,3 @@ export const SERVICE_AREAS = [
     { lga: 'Ungogo', zipcode: '700105', label: 'Ungogo LGA (700105)' }
 ];
 
-// Helper function to get service area by zipcode
-export const getServiceAreaByZipcode = (zipcode) => {
-    return SERVICE_AREAS.find(area => area.zipcode === zipcode);
-};
-
-// Helper function to get service area by LGA
-export const getServiceAreaByLGA = (lga) => {
-    return SERVICE_AREAS.find(area => area.lga === lga);
-};

@@ -1,62 +1,54 @@
-import React from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { Icon } from '@iconify/react';
+import React from "react";
+import { useAuth } from "../../context/AuthContext";
+import { Icon } from "@iconify/react";
 
 export default function Header({ toggleSidebar }) {
-    const auth = useAuth();
-    const userData = auth?.userData;
-    const userName = userData?.fullName || 'Admin User';
+  const auth = useAuth();
+  const userData = auth?.userData;
+  const userName = userData?.fullName || "Admin User";
 
-    // Helper to get initials (matches UserHeader)
-    const getInitials = (name) => {
-        const names = name.split(' ');
-        if (names.length >= 2) {
-            return (names[0][0] + names[1][0]).toUpperCase();
-        }
-        return name.slice(0, 2).toUpperCase();
-    };
+  // Helper to get initials (matches UserHeader)
+  const getInitials = (name) => {
+    const names = name.split(" ");
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
-    // Helper to truncate name (matches UserHeader)
-    const getDisplayName = (name) => {
-        if (name.length > 15) {
-            return name.slice(0, 15) + '...';
-        }
-        return name;
-    };
+  // Helper to truncate name (matches UserHeader)
+  const getDisplayName = (name) => {
+    if (name.length > 15) {
+      return name.slice(0, 15) + "...";
+    }
+    return name;
+  };
 
-    return (
-        <header className="fixed top-0 right-0 z-30 flex h-14 w-full lg:w-[calc(100%-16rem)] items-center justify-between bg-white px-6 border-b border-gray-200 transition-all duration-300">
-            <div className="flex items-center gap-4">
-                <button 
-                    onClick={toggleSidebar}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg lg:hidden"
-                >
-                    <Icon icon="hugeicons:menu-01" className="w-6 h-6" />
-                </button>
-                
-                {/* Search bar - admin only feature */}
-                <div className="relative hidden md:block">
-                    <Icon icon="hugeicons:search-01" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input 
-                        type="text" 
-                        placeholder="Search..." 
-                        className="h-10 w-64 rounded-full border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                </div>
+  return (
+    <header className="fixed top-0 right-0 z-30 flex h-14 w-full lg:w-[calc(100%-16rem)] items-center justify-between bg-white px-6 border-b border-gray-200 transition-all duration-300">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg lg:hidden"
+        >
+          <Icon icon="hugeicons:menu-01" className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 pl-4">
+            <div className="text-right hidden md:block">
+              <p className="text-sm font-medium text-gray-900">
+                {getDisplayName(userName)}
+              </p>
             </div>
-
-            <div className="flex items-center gap-6">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 pl-4">
-                        <div className="text-right hidden md:block">
-                            <p className="text-sm font-medium text-gray-900">{getDisplayName(userName)}</p>
-                        </div>
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            {getInitials(userName)}
-                        </div>
-                    </div>
-                </div>
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+              {getInitials(userName)}
             </div>
-        </header>
-    );
+          </div>
+        </div>
+      </div>
+    </header>
+  );
 }

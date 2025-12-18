@@ -1,34 +1,28 @@
 import { useState } from "react";
-import { Icon } from "@iconify/react";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../lib/firebase.js";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import Logo from "../../assets/Logo-Transparent.png";
-import LoadingBox from "../../components/common/LoadingBox";
-import ErrorBox from "../../components/common/ErrorBox";
-import { FormInput } from "../../components/common/FormInput";
+
+import { FormInput } from "../../components/reusable/FormInput";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
-  
+
   // States
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [agree, setAgree] = useState(false);
-  const [agreeError, setAgreeError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Popup & spinner states
+  // Spinner state
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showError, setShowError] = useState(false);
-  const [popupMessage, setPopupMessage] = useState("");
 
   // Email regex
-  const emailRegex = /^[^\s@]+@(gmail|yahoo|hotmail|outlook)\.com$/i;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   // Password checks
   const hasUppercase = /[A-Z]/;
@@ -69,10 +63,6 @@ export default function Login() {
   // Submit form function
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setAgreeError("");
-    setShowError(false);
-    setShowSuccess(false);
-    setPopupMessage("");
 
     let hasError = false;
     if (!email) {
@@ -83,66 +73,78 @@ export default function Login() {
       setPasswordError("Please enter password");
       hasError = true;
     }
-    if (!agree) {
-      setAgreeError("You must agree to the Terms and Privacy");
-      hasError = true;
-    }
+
     if (emailError || passwordError || hasError) return;
 
     try {
       setLoading(true);
 
       // Sign in with Firebase
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       // Check role in Firestore
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      let role = "user";
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+
       if (userDoc.exists()) {
-        role = userDoc.data().role || "user";
-      }
+        const userData = userDoc.data();
+        const role = userData.role || "user";
 
-      setLoading(false);
-      setPopupMessage("Login successful!");
-      setShowSuccess(true);
+        toast.success("Login successful!");
 
-      // Directing user base on role
-      setTimeout(() => {
+        // Immediate redirect based on role
         if (role === "admin") {
-          navigate("/admin-dashboard");
+          navigate("/admin/dashboard");
         } else {
           navigate("/dashboard");
         }
-      }, 2000);
-    } catch (error) {
-      setLoading(false);
-      console.error("Login error:", error);
-      console.log("Firebase error code:", error.code);
-
-      if (error.code === "auth/user-not-found") {
-        setPopupMessage("Account not found please create one");
-      } else if (error.code === "auth/wrong-password") {
-        setPopupMessage("Oops, incorrect password please try again");
-      } else if (error.code === "auth/too-many-requests") {
-        setPopupMessage("Too many attempt try again later");
-      } else if (error.code === "auth/network-request-failed") {
-        setPopupMessage("Oops, network error please try again");
       } else {
-        setPopupMessage("Oops, something went wrong please try again");
+        // Self-healing: Create default profile if missing
+        console.warn("Ghost user detected. Auto-creating profile...");
+
+        await setDoc(userRef, {
+          email: user.email,
+          fullName: "Restored User", // Placeholder name
+          role: "user",
+          createdAt: new Date(),
+          restoredAccount: true,
+        });
+
+        toast.success("Profile restored! Logging in...");
+        navigate("/dashboard");
       }
-      setShowError(true);
-      // Hide error
-      setTimeout(() => {
-        setShowError(false);
-      }, 3000);
+    } catch (error) {
+      console.error("Login error:", error);
+
+      let errorMessage = "Oops, something went wrong please try again";
+
+      if (
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/invalid-credential"
+      ) {
+        errorMessage = "Invalid email or password";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Invalid email or password";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many attempts. Try again later";
+      } else if (error.code === "auth/network-request-failed") {
+        errorMessage = "Network error. Please check your connection";
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center px-3">
-      <LoadingBox show={loading} message="Logging you in..." />
-      <ErrorBox show={showError} message={popupMessage} onClose={() => setShowError(false)} />
+      {/* Kept LoadingBox for full screen loading if desired, or replace with disabled button state */}
 
       <form
         onSubmit={handleSubmit}
@@ -191,42 +193,35 @@ export default function Login() {
           />
           <div className="text-gray-500 text-sm mt-2 mb-5 flex justify-start items-center gap-1">
             <span>Forgot password?</span>
-            <Link to="/ForgotPassword" className="text-sm text-[rgb(36,157,119)] hover:underline">
+            <Link
+              to="/ForgotPassword"
+              className="text-sm text-[rgb(36,157,119)] hover:underline"
+            >
               Reset password
             </Link>
           </div>
         </div>
 
-        {/* Checkbox */}
-        <div className="mb-4 flex items-center text-gray-500">
-          <input
-            type="checkbox"
-            id="agree"
-            className=" cursor-pointer w-4 h-4 accent-[rgb(36,157,119)] mr-2"
-            checked={agree}
-            onChange={() => setAgree(!agree)}
-          />
-          <label htmlFor="agree" className="text-sm gap-1 flex flex-wrap">
-            I agree with the{" "}
-            <Link to="/TermsPrivacy" className="hover:underline">
-              Terms and Privacy
-            </Link>
-          </label>
-        </div>
-        {agreeError && <p className="text-red-500 text-xs mb-2">{agreeError}</p>}
-
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-[rgb(36,157,119)] cursor-pointer text-white py-2 rounded hover:opacity-90 transition"
+          disabled={loading}
+          className={`w-full py-2 rounded text-white transition ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-[rgb(36,157,119)] hover:opacity-90 cursor-pointer"
+          }`}
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         {/* Creating account link */}
         <p className="mt-4 text-sm text-center">
           Don’t have an account?{" "}
-          <Link to="/CreateAccount" className="text-[rgb(36,157,119)] hover:underline">
+          <Link
+            to="/CreateAccount"
+            className="text-[rgb(36,157,119)] hover:underline"
+          >
             Create account
           </Link>
         </p>

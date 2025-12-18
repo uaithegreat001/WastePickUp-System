@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
 import { Icon } from "@iconify/react";
-import StatusBadge from "../admin/StatusBadge";
+import StatusBadge from "../reusable/StatusBadge";
 import { formatDate } from "../../lib/dateUtils";
-import PaymentButton from "../PaymentButton";
 
 // Shows details box for pickups, orders, payments or messages
 export default function UserDetailBox({ type, data, show, onClose, user }) {
@@ -46,11 +45,6 @@ export default function UserDetailBox({ type, data, show, onClose, user }) {
           title: "Bin Order Details",
           sub: `Ordered on ${formatFullDate(data.createdAt)}`,
         };
-      case "message":
-        return {
-          title: "Message Details",
-          sub: `Sent on ${formatFullDate(data.createdAt)}`,
-        };
       default:
         return { title: "Details", sub: "" };
     }
@@ -72,7 +66,9 @@ export default function UserDetailBox({ type, data, show, onClose, user }) {
         {/* Header of the box */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
           <div>
-            <h2 className="text-md font-medium text-gray-900 ">{header.title}</h2>
+            <h2 className="text-md font-medium text-gray-900 ">
+              {header.title}
+            </h2>
             <div className="flex items-center gap-3 mt-1">
               <p className="text-sm text-gray-500">{header.sub}</p>
               {data.status && <StatusBadge status={data.status} size="small" />}
@@ -88,9 +84,6 @@ export default function UserDetailBox({ type, data, show, onClose, user }) {
 
         {/* Rendering the box */}
         <div className="px-6 py-4 space-y-6">
-          {type === "message" && (
-            <MessageContent data={data} formatDate={formatShortDate} />
-          )}
           {type === "pickup" && (
             <PickupContent
               data={data}
@@ -108,70 +101,8 @@ export default function UserDetailBox({ type, data, show, onClose, user }) {
             />
           )}
         </div>
-
-        {/* close btn for message box details */}
-        {type === "message" && (
-          <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        )}
       </div>
     </div>
-  );
-}
-
-// message-specific content
-function MessageContent({ data, formatDate }) {
-  return (
-    <>
-      <div className="flex items-center justify-between">
-        {/* Subject of the message */}
-        <div className="flex-1">
-          <label className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">
-            Subject
-          </label>
-          <p className="text-gray-900 font-medium text-lg">{data.subject}</p>
-        </div>
-      </div>
-
-      {/* Message body */}
-      <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-        <label className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-2">
-          Message Content
-        </label>
-        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-          {data.message}
-        </p>
-      </div>
-
-      {/* admin reply if any */}
-      {data.adminResponse && (
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-          <div className="flex items-center gap-2 mb-2">
-            <Icon
-              icon="hugeicons:customer-support"
-              className="w-4 h-4 text-blue-600"
-            />
-            <label className="text-xs font-medium text-blue-800 uppercase tracking-wider">
-              Admin Response
-            </label>
-          </div>
-          <p className="text-sm text-blue-900 whitespace-pre-wrap leading-relaxed">
-            {data.adminResponse}
-          </p>
-          {data.respondedAt && (
-            <p className="text-xs text-blue-600 mt-2 text-right">
-              Responded on {formatDate(data.respondedAt)}
-            </p>
-          )}
-        </div>
-      )}
-    </>
   );
 }
 
@@ -213,7 +144,7 @@ function PickupContent({ data, formatDate, user, onClose }) {
 
         {/* waste & payment */}
         <div className="space-y-3">
-          <h4 className="text-sm text-gray-500">Waste & Payment</h4>
+          <h4 className="text-sm text-gray-500">Pickup Request Detailst</h4>
           <div className="bg-gray-50 rounded-xl p-5 space-y-4 border border-gray-200">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -241,6 +172,8 @@ function PickupContent({ data, formatDate, user, onClose }) {
                 ₦{data.amount?.toLocaleString() || "0"}
               </p>
             </div>
+
+            {/* Payment Button if Pending - REMOVED as payment is upfront */}
           </div>
         </div>
       </div>
@@ -323,6 +256,8 @@ function OrderContent({ data, formatDate, user, onClose }) {
                 <p className="text-sm text-gray-700">{data.notes}</p>
               </div>
             )}
+
+            {/* Payment Button if Pending - REMOVED as payment is upfront */}
           </div>
         </div>
       </div>

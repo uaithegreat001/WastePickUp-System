@@ -1,57 +1,43 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import UserLayout from '../../components/layouts/UserLayout';
-import ServiceForm from '../../components/user/ServiceForm';
-import { userService } from '../../services/userService';
-import SuccessBox from '../../components/common/SuccessBox';
+import React, { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import UserLayout from "../../components/layouts/UserLayout";
+import ServiceForm from "../../components/user/ServiceForm";
+import { userService } from "../../services/userService";
+import toast from "react-hot-toast";
 
 export default function OrderBin() {
-    const [showSuccess, setShowSuccess] = useState(false);
-    const { userData, currentUser } = useAuth();
+  const { userData, currentUser } = useAuth();
 
-    const user = userData || { fullName: 'User', email: '', phone: '' };
+  const user = userData || { fullName: "User", email: "", phone: "" };
 
-    const handleSubmit = async (formData) => {
-        try {
-            const completeData = {
-                ...formData,
-                userName: user.fullName,
-                userEmail: user.email,
-                userPhone: user.phone,
-                userId: currentUser?.uid || ''
-            };
+  const handleSubmit = async (formData) => {
+    try {   
+      const completeData = {
+        ...formData,
+        userName: user.fullName,
+        userEmail: user.email,
+        userPhone: user.phone,
+        userId: currentUser?.uid || "",
+      };
 
-            await userService.createBinOrder(completeData);
-            
-            setShowSuccess(true);
-            setTimeout(() => setShowSuccess(false), 5000);
-        } catch (error) {
-            console.error('Failed to submit bin order:', error);
-            alert('Failed to submit order. Please try again.');
-        }
-    };
+      await userService.createBinOrder(completeData);
 
-    return (
-        <UserLayout userName={user.fullName}>
-            <div className="max-w-4xl space-y-6">
-                <div>
-                    <h1 className="text-md font-medium text-gray-900">Order Waste Bin</h1>
-                    
-                </div>
+      toast.success("Bin ordered successfully!");
+    } catch (error) {
+      console.error("Failed to submit bin order:", error);
+      toast.error("Failed to submit order. Please try again.");
+    }
+  };
 
-                <ServiceForm 
-                    type="order"
-                    onSubmit={handleSubmit}
-                    userData={user}
-                />
-            </div>
+  return (
+    <UserLayout userName={user.fullName}>
+      <div className="max-w-4xl space-y-6">
+        <div>
+          <h1 className="text-md font-medium text-gray-900">Order Waste Bin</h1>
+        </div>
 
-            <SuccessBox
-                show={showSuccess}
-                onClose={() => setShowSuccess(false)}
-                title="Order Submitted Successfully!"
-                message="Your bin order has been submitted. We will process and deliver your order soon."
-            />
-        </UserLayout>
-    );
+        <ServiceForm type="order" onSubmit={handleSubmit} userData={user} />
+      </div>
+    </UserLayout>
+  );
 }

@@ -1,10 +1,7 @@
 import React from "react";
 import { Icon } from "@iconify/react";
-import { useLocation } from "react-router-dom";
 
 export default function UserHeader({ toggleSidebar, userName = "User" }) {
-  const location = useLocation();
-
   // getting initials of user name
   const getInitials = (name) => {
     const names = name.split(" ");
