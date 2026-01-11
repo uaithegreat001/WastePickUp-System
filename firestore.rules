@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read and write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Allow authenticated users to read and write pickupRequests (adjust as needed)
+    match /pickupRequests/{requestId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Add more rules for other collections as needed
+  }
+}

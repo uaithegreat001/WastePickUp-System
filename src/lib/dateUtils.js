@@ -1,102 +1,94 @@
 /**
- * Date utilities for handling Firebase Timestamps and date formatting
- * Use these functions instead of inline timestamp conversions
+ * Utility functions for date handling
  */
 
+console.log("dateUtils.js loaded");
+
 /**
- * Converts a Firebase Timestamp or date string to a JavaScript Date object
- * @param {Object|string|Date} timestamp - Firebase Timestamp, date string, or Date object
- * @returns {Date} JavaScript Date object
+ * Sorts an array of objects by createdAt field in descending order (newest first)
+ * @param {Array} arr - Array of objects with createdAt field
+ * @returns {Array} Sorted array
+ */
+export function sortByCreatedAt(arr) {
+  console.log("sortByCreatedAt called with", arr.length, "items");
+  return arr.sort((a, b) => {
+    const dateA = toDate(a.createdAt);
+    const dateB = toDate(b.createdAt);
+    return dateB.getTime() - dateA.getTime();
+  });
+}
+
+/**
+ * Converts a Firebase timestamp or date string to a Date object
+ * @param {any} timestamp - Firebase timestamp, date string, or Date object
+ * @returns {Date} Date object
  */
 export function toDate(timestamp) {
-    if (!timestamp) return null;
-    if (timestamp instanceof Date) return timestamp;
-    if (timestamp.toDate) return timestamp.toDate(); // Firebase Timestamp
-    return new Date(timestamp);
+  if (!timestamp) return null;
+
+  // If it's already a Date
+  if (timestamp instanceof Date) return timestamp;
+
+  // If it's a Firebase Timestamp
+  if (timestamp.toDate && typeof timestamp.toDate === "function") {
+    return timestamp.toDate();
+  }
+
+  // If it's a string or number
+  const date = new Date(timestamp);
+  return isNaN(date.getTime()) ? null : date;
 }
 
 /**
- * Formats a timestamp to a readable date string
- * @param {Object|string|Date} timestamp - Firebase Timestamp, date string, or Date object
+ * Formats a date to a readable string
+ * @param {Date|string|any} date - Date to format
  * @param {Object} options - Formatting options
- * @param {boolean} options.includeTime - Include time in output (default: false)
- * @param {boolean} options.includeWeekday - Include weekday name (default: false)
- * @param {string} options.dateStyle - 'short' | 'medium' | 'long' (default: 'medium')
+ * @param {boolean} options.includeTime - Include time in the format
+ * @param {boolean} options.includeWeekday - Include weekday in the format
+ * @param {string} options.dateStyle - Date style: 'short', 'medium', 'long', 'full'
  * @returns {string} Formatted date string
  */
-export function formatDate(timestamp, options = {}) {
-    const date = toDate(timestamp);
-    if (!date) return 'N/A';
+export function formatDate(date, options = {}) {
+  const d = toDate(date);
+  if (!d) return "N/A";
+  const {
+    includeTime = false,
+    includeWeekday = false,
+    dateStyle = "medium",
+  } = options;
 
-    const { 
-        includeTime = false, 
-        includeWeekday = false,
-        dateStyle = 'medium'
-    } = options;
+  const dateOptions = {
+    year: "numeric",
+    month:
+      dateStyle === "short"
+        ? "numeric"
+        : dateStyle === "medium"
+        ? "short"
+        : "long",
+    day: "numeric",
+  };
 
-    const formatOptions = {
-        year: 'numeric',
-        month: dateStyle === 'short' ? 'short' : dateStyle === 'long' ? 'long' : 'short',
-        day: 'numeric',
-    };
+  if (includeWeekday) {
+    dateOptions.weekday = dateStyle === "full" ? "long" : "short";
+  }
 
-    if (includeWeekday) {
-        formatOptions.weekday = 'long';
-    }
+  if (includeTime) {
+    dateOptions.hour = "2-digit";
+    dateOptions.minute = "2-digit";
+  }
 
-    if (includeTime) {
-        formatOptions.hour = '2-digit';
-        formatOptions.minute = '2-digit';
-    }
-
-    return date.toLocaleDateString('en-US', formatOptions);
+  return d.toLocaleDateString("en-US", dateOptions);
 }
 
 /**
- * Formats a timestamp for use in an HTML date input field (YYYY-MM-DD)
- * @param {Object|string|Date} timestamp - Firebase Timestamp, date string, or Date object
- * @returns {string} Date string in YYYY-MM-DD format
+ * Formats a date for input fields (YYYY-MM-DD)
+ * @param {Date|string|any} date - Date to format
+ * @returns {string} Formatted date string for input
  */
-export function formatDateForInput(timestamp) {
-    const date = toDate(timestamp);
-    if (!date) return '';
-    return date.toISOString().split('T')[0];
-}
-
-/**
- * Sorts an array of objects by their createdAt field (newest first)
- * @param {Array} array - Array of objects with createdAt field
- * @returns {Array} Sorted array (mutates original)
- */
-export function sortByCreatedAt(array) {
-    return array.sort((a, b) => {
-        const dateA = toDate(a.createdAt);
-        const dateB = toDate(b.createdAt);
-        return dateB - dateA;
-    });
-}
-
-/**
- * Checks if a date is today
- * @param {Object|string|Date} timestamp - Firebase Timestamp, date string, or Date object
- * @returns {boolean} True if date is today
- */
-export function isToday(timestamp) {
-    const date = toDate(timestamp);
-    if (!date) return false;
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-}
-
-/**
- * Checks if a date is yesterday
- * @param {Object|string|Date} timestamp - Firebase Timestamp, date string, or Date object
- * @returns {boolean} True if date is yesterday
- */
-export function isYesterday(timestamp) {
-    const date = toDate(timestamp);
-    if (!date) return false;
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return date.toDateString() === yesterday.toDateString();
+export function formatDateForInput(date) {
+  const d = toDate(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
