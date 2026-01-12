@@ -4,12 +4,17 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
+  setPersistence,
+  browserLocalPersistence,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export const authService = {
   async createAccount(email, password, profileData) {
     try {
+      // Ensure persistence is set before creating account
+      await setPersistence(auth, browserLocalPersistence);
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -36,6 +41,9 @@ export const authService = {
 
   async login(email, password) {
     try {
+      // Ensure persistence is set before logging in
+      await setPersistence(auth, browserLocalPersistence);
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
