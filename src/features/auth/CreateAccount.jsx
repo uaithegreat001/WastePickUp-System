@@ -129,7 +129,8 @@ export default function CreateAccount() {
       } else if (error.code === "auth/network-request-failed") {
         errorMessage = "Network error. Please try again.";
       } else if (error.code === "permission-denied") {
-        errorMessage = "Permission denied. Please check your account or contact support.";
+        errorMessage =
+          "Permission denied. Please check your account or contact support.";
       }
 
       toast.error(errorMessage);
@@ -142,7 +143,7 @@ export default function CreateAccount() {
     <div className="min-h-screen flex flex-col items-center justify-center px-3">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg p-8 rounded-lg text-gray-600 bg-transparent"
+        className="w-full max-w-lg p-8 px-2 rounded-lg text-gray-600 bg-transparent"
         noValidate
       >
         <div className="flex mb-4 flex-col mx-auto max-w-45 items-center">

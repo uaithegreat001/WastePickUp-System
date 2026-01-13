@@ -145,10 +145,10 @@ export default function MapComponent({ tasks }) {
             <Marker key={task.id} position={[finalLat, finalLng]}>
               <Popup>
                 <div className="space-y-2 min-w-[200px]">
-                  <h3 className="font-bold text-gray-900 border-b pb-1">
+                  <h3 className="font-bold text-gray-900 border-b border-b-gray-300 pb-1">
                     {task.userName || "Resident"}
                   </h3>
-                  <div className="text-sm space-y-1">
+                  <div className="text-sm  space-y-1">
                     {/*<p className="text-gray-600 font-medium">{task.location}</p>*/}
                     <p className="text-gray-500 text-xs">{task.fullAddress}</p>
                     <p className="text-primary font-bold">
@@ -159,7 +159,7 @@ export default function MapComponent({ tasks }) {
                     onClick={() => handleNavigate(cluster.baseCoords)}
                     className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-hover transition-colors"
                   >
-                    <Icon icon="hugeicons:navigation-01" className="w-4 h-4" />
+                    <Icon icon="hugeicons:navigation-02" className="w-4 h-4" />
                     Navigate to Location
                   </button>
                 </div>

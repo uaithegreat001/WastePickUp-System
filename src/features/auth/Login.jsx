@@ -117,7 +117,7 @@ export default function Login() {
     <div className="min-h-screen w-full flex items-center justify-center px-3">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg p-8 rounded-lg text-gray-600 bg-transparent"
+        className="w-full max-w-lg p-8 px-2 rounded-lg text-gray-600 bg-transparent"
         noValidate
       >
         <div className="flex mb-4 flex-col mx-auto max-w-45 items-center">

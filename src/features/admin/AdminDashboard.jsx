@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AdminLayout from "./AdminLayout";
 import AdminDetailBox from "./AdminDetailBox";
-import StatusBadge from "../../components/reusable/StatusBadge";
 import { adminService } from "./adminService";
 import AdminDataTable from "./AdminDataTable";
 
@@ -48,8 +47,7 @@ export default function AdminDashboard() {
         <div className="mb-6">
           <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Manage all incoming pickup requests and monitor system-wide
-            activity.
+            Manage all incoming pickup requests and monitor the system activity.
           </p>
         </div>
 

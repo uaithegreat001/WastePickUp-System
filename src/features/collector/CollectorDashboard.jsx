@@ -223,7 +223,7 @@ function TaskCard({
               {isCompleting ? "Completing..." : "Mark Collected"}
             </button>
             <button className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-              <Icon icon="hugeicons:navigation-01" className="w-4 h-4" />
+              <Icon icon="hugeicons:navigation-02" className="w-4 h-4" />
             </button>
           </>
         )}

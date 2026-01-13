@@ -1,8 +1,7 @@
 {
-  "firestore": {
-    "rules": "firestore.rules"
-  },
+
   "hosting": {
+    "site": "wastepickup-system-db",
     "public": "dist",
     "ignore": [
       "firebase.json",

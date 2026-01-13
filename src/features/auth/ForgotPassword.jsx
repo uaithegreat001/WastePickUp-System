@@ -60,7 +60,7 @@ export default function ForgotPassword() {
     <div className="min-h-screen w-full flex flex-col items-center justify-center px-2 sm:px-4 relative">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg sm:max-w-md md:max-w-lg border border-gray-300 bg-gray-50 p-4 sm:p-8 rounded-lg text-gray-600 transition-all duration-700"
+        className="w-full max-w-lg sm:max-w-md md:max-w-lg bg-transparent p-4 px-2 sm:p-8 rounded-lg text-gray-600 transition-all duration-700"
         noValidate
       >
         <div className="flex mb-4 flex-col mx-auto max-w-45 items-center">
