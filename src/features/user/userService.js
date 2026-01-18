@@ -17,32 +17,14 @@ import { handleError, withErrorHandling } from "../../lib/errorHandler";
 
 import { v4 as uuidv4 } from "uuid";
 
-const makePayment = withErrorHandling(async (paymentData) => {
-  const payload = {
-    userId: paymentData.userId,
-    requestId: paymentData.requestId,
-    amount: paymentData.amount,
-    status: paymentData.status || "pending",
-    paymentMethod: paymentData.paymentMethod,
-    paymentReference: paymentData.paymentReference || "",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const docRef = await addDoc(collection(db, "payments"), payload);
-  return { success: true, id: docRef.id };
-}, "Payment Creation");
-
 export const userService = {
-  makePayment,
-
+  // Submit Waste Pickup Request
   createPickupRequest: withErrorHandling(
     async (requestData) => {
-      // Generate a persistent ID for idempotency (offline & online)
       const requestId = uuidv4();
 
       const payload = {
-        requestId, // store logic ID in document
+        requestId,
         userId: requestData.userId,
         userName: requestData.userName,
         location: requestData.location,
@@ -58,7 +40,6 @@ export const userService = {
         updatedAt: new Date().toISOString(),
         targetCollection: "pickupRequests",
       };
-
       if (!navigator.onLine) {
         try {
           await addToQueue(payload);
@@ -70,16 +51,14 @@ export const userService = {
         } catch (error) {
           handleError(error, "Offline Queue Storage", true);
           throw new Error(
-            "Failed to save request offline. Please check your browser storage settings."
+            "Failed to save request offline. Please check your browser storage settings.",
           );
         }
       }
 
-      // Use setDoc with the pre-generated ID to guarantee consistency
-      // and match the offline behavior logic
       const docRef = doc(db, "pickupRequests", requestId);
       await setDoc(docRef, payload);
-
+      
       const paymentPayload = {
         userId: payload.userId,
         requestId: requestId,
@@ -89,7 +68,7 @@ export const userService = {
         paymentReference: requestData.paymentReference || "",
       };
 
-      await makePayment(paymentPayload);
+      await userService.makePayment(paymentPayload);
 
       return {
         success: true,
@@ -98,15 +77,32 @@ export const userService = {
       };
     },
     "Pickup Request Creation",
-    false
-  ), // Don't show toast here, let component handle it
+    false,
+  ),
+
+  // Process Payment
+  makePayment: withErrorHandling(async (paymentData) => {
+    const payload = {
+      userId: paymentData.userId,
+      requestId: paymentData.requestId,
+      amount: paymentData.amount,
+      status: paymentData.status || "pending",
+      paymentMethod: paymentData.paymentMethod,
+      paymentReference: paymentData.paymentReference || "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const docRef = await addDoc(collection(db, "payments"), payload);
+    return { success: true, id: docRef.id };
+  }, "Payment Creation"),
 
   getUserPickupRequests: withErrorHandling(async (userId) => {
     let firestoreRequests = [];
     try {
       const q = query(
         collection(db, "pickupRequests"),
-        where("userId", "==", userId)
+        where("userId", "==", userId),
       );
 
       const querySnapshot = await getDocs(q);
@@ -116,10 +112,9 @@ export const userService = {
         syncStatus: "synced",
       }));
     } catch (error) {
-      // If Firestore fails (e.g., offline), proceed with empty firestoreRequests
       console.warn(
         "Failed to fetch from Firestore, using local data only:",
-        error.message
+        error.message,
       );
     }
 
@@ -137,15 +132,17 @@ export const userService = {
   subscribeToUserPickupRequests: (userId, callback) => {
     const q = query(
       collection(db, "pickupRequests"),
-      where("userId", "==", userId)
+      where("userId", "==", userId),
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const requests = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        syncStatus: "synced",
-      }));
+      const requests = querySnapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          syncStatus: "synced",
+        }))
+        .filter((req) => req.status !== "collected");
       callback(requests);
     });
 
@@ -167,7 +164,7 @@ export const userService = {
     const q = query(
       collection(db, "notifications"),
       where("userId", "==", userId),
-      where("read", "==", false)
+      where("read", "==", false),
     );
 
     const snapshot = await getDocs(q);

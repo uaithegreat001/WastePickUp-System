@@ -3,16 +3,13 @@ import { useNetwork } from "../hooks/useNetwork";
 import { getPendingQueue } from "../lib/indexedDb";
 import { Icon } from "@iconify/react";
 
-/**
- * Premium Sync Indicator with glassmorphism and vibrant colors.
- * Shows online/offline status, pending items, and sync progress.
- */
 const SyncIndicator = () => {
   const { isOnline } = useNetwork();
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
+  
     const updatePendingCount = async () => {
       try {
         const pending = await getPendingQueue();
@@ -24,13 +21,14 @@ const SyncIndicator = () => {
 
     updatePendingCount();
 
-    // Listen for sync events
+    // Sync events listeners
     const handleSyncStart = () => setIsSyncing(true);
     const handleSyncComplete = () => {
       setIsSyncing(false);
       updatePendingCount();
     };
-
+    
+    // Add event listeners
     window.addEventListener("syncStart", handleSyncStart);
     window.addEventListener("syncComplete", handleSyncComplete);
 
@@ -40,6 +38,7 @@ const SyncIndicator = () => {
     };
   }, []);
 
+  
   const getStatusInfo = () => {
     if (isSyncing) {
       return {
@@ -49,7 +48,8 @@ const SyncIndicator = () => {
         animate: true,
       };
     }
-
+    
+    // Offline mode 
     if (!isOnline) {
       return {
         icon: "solar:cloud-cross-bold",
@@ -58,7 +58,8 @@ const SyncIndicator = () => {
         animate: false,
       };
     }
-
+    
+    // Pending tasks 
     if (pendingCount > 0) {
       return {
         icon: "solar:cloud-upload-bold",
@@ -78,14 +79,12 @@ const SyncIndicator = () => {
 
   const { text } = getStatusInfo();
 
-  // Log status to console
   console.log(
     `Sync Status: ${text}${
       !isOnline && pendingCount > 0 ? ` (${pendingCount} queued)` : ""
-    }${isOnline && pendingCount > 0 && !isSyncing ? " (Auto-syncing)" : ""}`
+    }${isOnline && pendingCount > 0 && !isSyncing ? " (Auto-syncing)" : ""}`,
   );
 
-  // Only show visual indicator when syncing
   if (!isSyncing) return null;
 
   return (

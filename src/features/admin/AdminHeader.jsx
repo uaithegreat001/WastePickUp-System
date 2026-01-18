@@ -7,7 +7,7 @@ export default function Header({ toggleSidebar }) {
   const userData = auth?.userData;
   const userName = userData?.fullName || "Admin User";
 
-  // Helper to get initials (matches UserHeader)
+  // Helper to get initials name text
   const getInitials = (name) => {
     const names = name.split(" ");
     if (names.length >= 2) {
@@ -16,7 +16,7 @@ export default function Header({ toggleSidebar }) {
     return name.slice(0, 2).toUpperCase();
   };
 
-  // Helper to truncate name (matches UserHeader)
+  // Helper to truncate name 
   const getDisplayName = (name) => {
     if (name.length > 15) {
       return name.slice(0, 15) + "...";

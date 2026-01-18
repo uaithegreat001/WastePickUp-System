@@ -25,12 +25,13 @@ export default function CollectorDashboard() {
       (liveTasks) => {
         setTasks(liveTasks.filter((t) => t.status !== "collected"));
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
   }, [userData]);
-
+  
+  // handle collect 
   const handleCollect = async (task) => {
     if (completingTasks.has(task.id)) return;
 
@@ -42,10 +43,11 @@ export default function CollectorDashboard() {
       toast.info("User must pay before collection can be completed");
       return;
     }
-
+    
     setCompletingTasks((prev) => new Set(prev).add(task.id));
     try {
       await collectorService.completeTask(task.id);
+      setTasks((prev) => prev.filter((t) => t.id !== task.id));
       toast.success("Task completed successfully");
     } catch (error) {
       toast.error("Failed to complete task");
@@ -57,12 +59,14 @@ export default function CollectorDashboard() {
       });
     }
   };
-
+  
+  // handle payment success
   const handlePaymentSuccess = async (reference) => {
     if (!paymentTask) return;
     setCompletingTasks((prev) => new Set(prev).add(paymentTask.id));
     try {
       await collectorService.completeTask(paymentTask.id, true);
+      setTasks((prev) => prev.filter((t) => t.id !== paymentTask.id));
       toast.success("Payment verified and task completed");
       setPaymentTask(null);
     } catch (error) {
@@ -151,7 +155,7 @@ function TaskCard({
       amount: (task.amount || 1000) * 100,
       publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
     }),
-    [task]
+    [task],
   );
 
   return (

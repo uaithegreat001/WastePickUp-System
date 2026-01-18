@@ -35,7 +35,7 @@ export default function Notifications() {
       }));
       setNotifications(notifs);
 
-      // Initial highlights for unread
+      // Handle unread notifications
       const unreadIds = notifs
         .filter((n) => !(n.Read || n.read))
         .map((n) => n.id);
@@ -47,12 +47,12 @@ export default function Notifications() {
     return () => unsubscribe();
   }, [currentUser?.uid]);
 
-  // Fade out highlights and mark as read after 5 seconds
+  // Handle fade out highlights and mark as read after 5 seconds
   useEffect(() => {
     if (visibleHighlights.size > 0) {
       const timer = setTimeout(() => {
         setVisibleHighlights(new Set());
-        // Persist read status to database after 5 seconds
+        // Persist read status to database 
         if (currentUser?.uid) {
           userService.markAllNotificationsAsRead(currentUser.uid);
         }

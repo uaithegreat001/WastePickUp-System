@@ -52,13 +52,13 @@ export default function AdminProfile() {
       });
 
       setIsEditing(false);
-      toast.success("Changes Saved!");
+      toast.success("Changes Saved");
 
       // Reload to refresh context
       window.location.reload();
     } catch (error) {
       console.error("Error saving profile:", error);
-      toast.error("Failed to save profile. Please try again.");
+      toast.error("Failed to save profile. Please try again");
     } finally {
       setIsSaving(false);
     }

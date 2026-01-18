@@ -7,16 +7,13 @@ import { SERVICE_AREAS } from "../../lib/constants";
 import { adminService } from "../admin/adminService";
 import toast from "react-hot-toast";
 
-// Default pricing (used as a fallback) for pickup price
 const DEFAULT_PICKUP_PRICES = [
   { value: "50", label: "50 Litres", price: 500 },
   { value: "120", label: "120 Litres", price: 1000 },
   { value: "240", label: "240 Litres", price: 1500 },
 ];
 
-// Handles pickup requests
 export default function ServiceForm({ onSubmit, userData }) {
-  // Dynamic pricing state
   const [pickupPrices, setPickupPrices] = useState(DEFAULT_PICKUP_PRICES);
 
   const prices = pickupPrices;
@@ -31,7 +28,6 @@ export default function ServiceForm({ onSubmit, userData }) {
   const [submitting, setSubmitting] = useState(false);
   const [total, setTotal] = useState(0);
 
-  // Recalculate total when binSize changes
   useEffect(() => {
     const litres = parseFloat(form.binSize) || 0;
     setTotal(litres * 10);
@@ -65,7 +61,7 @@ export default function ServiceForm({ onSubmit, userData }) {
       setSubmitting(false);
     }
   };
-
+  
   const handlePaystackSuccess = async (reference) => {
     setSubmitting(true);
     const toastId = toast.loading("Verifying payment...");
@@ -121,7 +117,7 @@ export default function ServiceForm({ onSubmit, userData }) {
       amount: total * 100,
       publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
     }),
-    [total, userData?.email]
+    [total, userData?.email],
   );
 
   const isFormValid =

@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 const COLLECTORS = [
   { id: "c1", name: "Musa Isa" },
   { id: "c2", name: "Mohd Lawan" },
-  
 ];
 
 // admin detail box component
@@ -47,7 +46,7 @@ export default function AdminDetailBox({ data, show, onClose, onSubmit }) {
   // handle form submission
   const handleSubmit = async () => {
     if (!form.scheduledDate || !form.scheduledTime) {
-      toast.error("Please select both a date and time for the schedule.");
+      toast.error("Please select both a date and time for the schedule");
       return;
     }
     setSubmitting(true);
@@ -55,22 +54,18 @@ export default function AdminDetailBox({ data, show, onClose, onSubmit }) {
     // update schedule by admin
     try {
       // Convert morning/afternoon to actual time
-      const timeString = form.scheduledTime === 'morning' ? '10:00' : '14:00';
+      const timeString = form.scheduledTime === "morning" ? "10:00" : "14:00";
       await onSubmit(data.id, {
-        date: new Date(
-          `${form.scheduledDate}T${timeString}`
-        ).toISOString(),
+        date: new Date(`${form.scheduledDate}T${timeString}`).toISOString(),
         collectorName: form.collector,
         userEmail: data.userEmail,
       });
 
-      toast.success(
-        `Schedule sent successfully to ${data.userName || "user"}!`
-      );
+      toast.success(`Schedule sent successfully to ${data.userName || "user"}`);
 
       onClose();
     } catch (error) {
-      toast.error("Failed to send schedule. Please try again.");
+      toast.error("Failed to send schedule. Please try again");
     } finally {
       setSubmitting(false);
     }
@@ -97,7 +92,6 @@ export default function AdminDetailBox({ data, show, onClose, onSubmit }) {
             `}</style>
 
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto hide-scrollbar shadow-2xl flex flex-col relative">
-        {/* update header title of the box details */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
           <div>
             <h2 className="text-md font-medium text-gray-900">
@@ -119,7 +113,7 @@ export default function AdminDetailBox({ data, show, onClose, onSubmit }) {
         </div>
 
         {/* rendering the box details content */}
-        <div className="px-6 py-4 space-y-8">
+        <div className="px-6 py-4 space-y-4">
           <PickupContent
             data={data}
             form={form}
@@ -146,7 +140,7 @@ function PickupContent({
   onClose,
 }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <UserSection data={data} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* location */}
@@ -202,8 +196,8 @@ function PickupContent({
                       data.paymentStatus === "verified"
                         ? "paid"
                         : data.paymentMethod === "onPickup"
-                        ? "onPickup"
-                        : "pending"
+                          ? "onPickup"
+                          : "pending"
                     }
                     size="small"
                   />
@@ -360,7 +354,12 @@ function ScheduleSection({
         ) : (
           <button
             onClick={handleSubmit}
-            disabled={submitting || !form.scheduledDate || !form.scheduledTime || !['morning', 'afternoon'].includes(form.scheduledTime)}
+            disabled={
+              submitting ||
+              !form.scheduledDate ||
+              !form.scheduledTime ||
+              !["morning", "afternoon"].includes(form.scheduledTime)
+            }
             className="px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {submitting ? "Sending..." : "Send Schedule"}

@@ -1,6 +1,4 @@
-/**
- * Application constants
- */
+/* Application services */
 
 export const SERVICE_AREAS = [
   {

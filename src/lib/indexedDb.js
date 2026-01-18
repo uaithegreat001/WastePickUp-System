@@ -1,13 +1,8 @@
-/**
- * Simple IndexedDB wrapper for managing the "Pending Queue".
- * Aligned with project objectives for offline data handling.
- * Rules: camelCase, flat logic, no loops.
- */
-
 const DB_NAME = "WastePickUpOfflineDB";
 const STORE_NAME = "pendingSync";
 const DB_VERSION = 1;
 
+// open offline database
 export const openOfflineDB = () => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -32,22 +27,20 @@ export const addToQueue = async (data) => {
   const tx = db.transaction(STORE_NAME, "readwrite");
   const store = tx.objectStore(STORE_NAME);
 
-  // Ensure timestamp is added for conflict resolution
+  // add timestamp for conflict resolution 
   const queueItem = {
     ...data,
     queuedAt: new Date().toISOString(),
   };
 
-  console.log("Adding to queue with status:", queueItem.status); // Debug log
-
   store.add(queueItem);
 
-  // Notify UI
   window.dispatchEvent(new CustomEvent("localQueueUpdated"));
 
   return tx.complete;
 };
 
+// get pending queue
 export const getPendingQueue = async () => {
   const db = await openOfflineDB();
   const tx = db.transaction(STORE_NAME, "readonly");
@@ -60,14 +53,13 @@ export const getPendingQueue = async () => {
   });
 };
 
+// remove from queue
 export const removeFromQueue = async (id) => {
   const db = await openOfflineDB();
   const tx = db.transaction(STORE_NAME, "readwrite");
   const store = tx.objectStore(STORE_NAME);
 
   store.delete(id);
-
-  // Notify UI
   window.dispatchEvent(new CustomEvent("localQueueUpdated"));
 
   return tx.complete;

@@ -1,14 +1,7 @@
-/**
- * Utility functions for date handling
- */
-
+/* Utility functions for date handling */
 console.log("dateUtils.js loaded");
 
-/**
- * Sorts an array of objects by createdAt field in descending order (newest first)
- * @param {Array} arr - Array of objects with createdAt field
- * @returns {Array} Sorted array
- */
+/* Sorts an array of objects by createdAt */
 export function sortByCreatedAt(arr) {
   console.log("sortByCreatedAt called with", arr.length, "items");
   return arr.sort((a, b) => {
@@ -18,11 +11,7 @@ export function sortByCreatedAt(arr) {
   });
 }
 
-/**
- * Converts a Firebase timestamp or date string to a Date object
- * @param {any} timestamp - Firebase timestamp, date string, or Date object
- * @returns {Date} Date object
- */
+/* Converts a Firebase timestamp or date string to a Date object */
 export function toDate(timestamp) {
   if (!timestamp) return null;
 
@@ -39,15 +28,7 @@ export function toDate(timestamp) {
   return isNaN(date.getTime()) ? null : date;
 }
 
-/**
- * Formats a date to a readable string
- * @param {Date|string|any} date - Date to format
- * @param {Object} options - Formatting options
- * @param {boolean} options.includeTime - Include time in the format
- * @param {boolean} options.includeWeekday - Include weekday in the format
- * @param {string} options.dateStyle - Date style: 'short', 'medium', 'long', 'full'
- * @returns {string} Formatted date string
- */
+/* Formats a date to a readable string */
 export function formatDate(date, options = {}) {
   const d = toDate(date);
   if (!d) return "N/A";
@@ -80,11 +61,7 @@ export function formatDate(date, options = {}) {
   return d.toLocaleDateString("en-US", dateOptions);
 }
 
-/**
- * Formats a date for input fields (YYYY-MM-DD)
- * @param {Date|string|any} date - Date to format
- * @returns {string} Formatted date string for input
- */
+/* Formats a date for input fields */
 export function formatDateForInput(date) {
   const d = toDate(date);
   const year = d.getFullYear();

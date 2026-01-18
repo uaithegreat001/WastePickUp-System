@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 
-/*
- Custom hook to monitor internal and external network connectivity.
- 
- */
+// Monitors network connectivity status
 export const useNetwork = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-
+  
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);

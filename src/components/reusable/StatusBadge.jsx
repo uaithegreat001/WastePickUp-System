@@ -52,7 +52,7 @@ export default function StatusBadge({ status, size = "medium" }) {
     medium: "px-2.5 py-1 text-xs",
     large: "px-3 py-1.5 text-sm",
   };
-
+  
   if (statusKey === "dot") {
     return (
       <span className="w-2 h-2 rounded-full bg-red-500 inline-block align-middle" />

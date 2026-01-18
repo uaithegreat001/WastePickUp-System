@@ -26,6 +26,7 @@ const DEFAULT_PRICING = {
 };
 
 export const adminService = {
+  // fetch user from DB
   async getUsers() {
     try {
       const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
@@ -45,11 +46,12 @@ export const adminService = {
     }
   },
 
+  // fetch pickup requests from DB
   async getPickupRequests() {
     try {
       const q = query(
         collection(db, "pickupRequests"),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
 
       const querySnapshot = await getDocs(q);
@@ -67,11 +69,12 @@ export const adminService = {
     }
   },
 
+  // subscribe to pickup requests
   subscribeToPickupRequests(callback) {
     try {
       const q = query(
         collection(db, "pickupRequests"),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
 
       const unsubscribe = onSnapshot(q, async (querySnapshot) => {
@@ -106,6 +109,7 @@ export const adminService = {
     }
   },
 
+  // update pickup schedule
   async updatePickupSchedule(requestId, scheduleData) {
     try {
       const payload = {
@@ -135,7 +139,6 @@ export const adminService = {
         scheduledAt: serverTimestamp(),
       });
 
-      // Create in-app notification
       const requestDoc = await getDoc(doc(db, "pickupRequests", requestId));
       if (requestDoc.exists()) {
         const userId = requestDoc.data().userId;
@@ -144,9 +147,9 @@ export const adminService = {
           type: "pickup",
           title: "Pickup Scheduled",
           message: `<p>Hi there,</p><p>Great news! Your waste pickup is now scheduled for:</p><div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;"><p><strong>Date:</strong> ${new Date(
-            scheduleData.date
+            scheduleData.date,
           ).toLocaleDateString()}</p><p><strong>Time:</strong> ${new Date(
-            scheduleData.date
+            scheduleData.date,
           ).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",

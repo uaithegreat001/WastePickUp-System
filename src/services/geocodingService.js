@@ -1,8 +1,7 @@
 // Geocoding service using OpenStreetMap Nominatim API
-// Caches results in localStorage to reduce API calls
 
 const CACHE_KEY = 'geocoding_cache';
-const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_EXPIRY = 24 * 60 * 60 * 1000; 
 
 // Get cached coordinates
 const getCachedCoordinates = (location) => {
@@ -12,7 +11,7 @@ const getCachedCoordinates = (location) => {
     if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY) {
       return cached.coords;
     }
-    // Remove expired entry
+    
     if (cached) {
       delete cache[location];
       localStorage.setItem(CACHE_KEY, JSON.stringify(cache));

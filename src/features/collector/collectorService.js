@@ -11,28 +11,34 @@ import {
 } from "firebase/firestore";
 import { toDate } from "../../lib/dateUtils";
 
+// Collector Service
 export const collectorService = {
-  /**
-   * Subscribe to tasks assigned to a specific collector
-   */
+  // Subscribe to collector tasks
   subscribeToCollectorTasks(collectorName, callback) {
     try {
       const q = query(
         collection(db, "pickupRequests"),
         where("collectorName", "==", collectorName),
-        orderBy("scheduledDate", "asc")
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tasks = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            scheduledDate: toDate(data.scheduledDate),
-            createdAt: toDate(data.createdAt),
-          };
-        });
+        const tasks = snapshot.docs
+          .map((doc) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              scheduledDate: toDate(data.scheduledDate),
+              createdAt: toDate(data.createdAt),
+            };
+          })
+          .sort((a, b) => {
+            // Sort tasks by scheduledDate
+            if (!a.scheduledDate && !b.scheduledDate) return 0;
+            if (!a.scheduledDate) return 1;
+            if (!b.scheduledDate) return -1;
+            return a.scheduledDate - b.scheduledDate;
+          });
         callback(tasks);
       });
 
@@ -43,9 +49,7 @@ export const collectorService = {
     }
   },
 
-  /**
-   * Mark a task as collected/completed
-   */
+  // Track task completion
   async completeTask(taskId, paymentVerified = false) {
     try {
       const taskRef = doc(db, "pickupRequests", taskId);

@@ -48,10 +48,10 @@ export default function CollectorProfile() {
       });
 
       setIsEditing(false);
-      toast.success("Profile Updated!");
+      toast.success("Profile Updated");
     } catch (error) {
       console.error("Error saving profile:", error);
-      toast.error("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again");
     } finally {
       setIsSaving(false);
     }

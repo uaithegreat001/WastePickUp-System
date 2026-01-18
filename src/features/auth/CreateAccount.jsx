@@ -116,21 +116,21 @@ export default function CreateAccount() {
 
       await authService.createAccount(email, password, profileData);
 
-      toast.success("Account created successfully!");
+      toast.success("Account created successfully");
       navigate("/dashboard");
     } catch (error) {
-      let errorMessage = "Oops, something went wrong please try again.";
+      let errorMessage = "Oops, something went wrong please try again";
       if (error.code === "auth/email-already-in-use") {
-        errorMessage = "User already exists. Please login instead.";
+        errorMessage = "User already exists. Please login instead";
       } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address.";
+        errorMessage = "Invalid email address";
       } else if (error.code === "auth/weak-password") {
-        errorMessage = "Password is too weak.";
+        errorMessage = "Password is too weak";
       } else if (error.code === "auth/network-request-failed") {
-        errorMessage = "Network error. Please try again.";
+        errorMessage = "Network error. Please try again";
       } else if (error.code === "permission-denied") {
         errorMessage =
-          "Permission denied. Please check your account or contact support.";
+          "Permission denied. Please check your account or contact support";
       }
 
       toast.error(errorMessage);

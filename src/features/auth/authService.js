@@ -12,13 +12,13 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 export const authService = {
   async createAccount(email, password, profileData) {
     try {
-      // Ensure persistence is set before creating account
+      // Set persistence for session
       await setPersistence(auth, browserLocalPersistence);
 
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const user = userCredential.user;
 
@@ -39,18 +39,20 @@ export const authService = {
     }
   },
 
+  // Login user
   async login(email, password) {
     try {
-      // Ensure persistence is set before logging in
       await setPersistence(auth, browserLocalPersistence);
 
+      // Validate credentials
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const user = userCredential.user;
 
+      // Retrieve user data from database
       const userDoc = await getDoc(doc(db, "users", user.uid));
 
       if (!userDoc.exists()) {
@@ -65,6 +67,7 @@ export const authService = {
         return { success: true, user, userData: fallbackPayload };
       }
 
+      // Grant access with user data
       return { success: true, user, userData: userDoc.data() };
     } catch (error) {
       console.error("Error logging in:", error);
@@ -72,6 +75,7 @@ export const authService = {
     }
   },
 
+  // Forgot password
   async forgotPassword(email, actionCodeSettings = null) {
     try {
       await sendPasswordResetEmail(auth, email, actionCodeSettings);
@@ -82,6 +86,7 @@ export const authService = {
     }
   },
 
+  // Logout 
   async logout() {
     try {
       await signOut(auth);

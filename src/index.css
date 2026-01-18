@@ -26,10 +26,6 @@ body {
   min-height: 100vh;
 }
 
-/* Remove all shadows globally as requested */
-* {
-  box-shadow: none !important;
-}
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {

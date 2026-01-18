@@ -14,7 +14,7 @@ export default function UserProfile() {
     phone: "",
   });
 
-  // Helper to get initials
+  // function for handling initial name of user
   const getInitials = (name) => {
     if (!name) return "U";
     const names = name.split(" ");
@@ -48,10 +48,10 @@ export default function UserProfile() {
       });
 
       setIsEditing(false);
-      toast.success("Profile Updated!");
+      toast.success("Profile Updated");
     } catch (error) {
       console.error("Error saving profile:", error);
-      toast.error("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again");
     } finally {
       setIsSaving(false);
     }

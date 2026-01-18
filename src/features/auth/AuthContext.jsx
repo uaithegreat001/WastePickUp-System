@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
             if (docSnapshot.exists()) {
               setUserData(docSnapshot.data());
             } else {
-              // User authenticated but no profile in Firestore - create fallback
+              // User authenticated fallback profile
               console.warn(
                 "User authenticated but no profile found in Firestore. Creating fallback profile."
               );
@@ -89,6 +89,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
+
     <AuthContext.Provider value={value}>
       {loading ? (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">

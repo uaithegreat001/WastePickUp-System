@@ -65,7 +65,7 @@ export default function UserSidebar({ isOpen }) {
 
       <nav className="mt-6 px-4 space-y-2">
         {menuItems.map((item) => {
-          // For dashboard, match both /dashboard and /user/dashboard
+          // for active path navigation
           const isActive =
             item.path === "/user/dashboard"
               ? location.pathname === "/dashboard" ||

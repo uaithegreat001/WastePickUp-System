@@ -4,7 +4,6 @@ import { Icon } from "@iconify/react";
 import { geocodeLocation } from "../services/geocodingService";
 import L from "leaflet";
 
-// Fix for default marker icon issues in React Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -33,7 +32,6 @@ export default function MapComponent({ tasks }) {
         if (!baseAddress) continue;
 
         // Construct full address for better geocoding accuracy
-        // Only append context if not already present to avoid duplication
         const fullAddress = baseAddress.toLowerCase().includes("kano")
           ? baseAddress
           : `${baseAddress}, Kano, Nigeria`;
@@ -44,8 +42,7 @@ export default function MapComponent({ tasks }) {
             newCoords[fullAddress] = coords;
           } catch (error) {
             console.error(`Failed to geocode ${fullAddress}:`, error);
-            // use default coordinates for Kano if geocoding fails
-            // Add a tiny random offset to default to prevent perfect overlap on fallback too
+          // Use default coordinates for Kano if geocoding fails
             const randomOffset = (Math.random() - 0.5) * 0.002;
             newCoords[fullAddress] = {
               lat: 12.0022 + randomOffset,
@@ -75,7 +72,7 @@ export default function MapComponent({ tasks }) {
   // default center on Kano, Nigeria
   const defaultCenter = [12.0022, 8.5919];
 
-  // Helper to group tasks by their resolved coordinates
+  // Group tasks by their resolved coordinates
   const getClusteredTasks = () => {
     const clusters = {};
 
@@ -90,7 +87,6 @@ export default function MapComponent({ tasks }) {
       const coords = coordinates[fullAddress];
 
       if (coords) {
-        // Create a key based on lat/lng to group exact matches
         const key = `${coords.lat.toFixed(6)},${coords.lng.toFixed(6)}`;
         if (!clusters[key]) {
           clusters[key] = {
@@ -126,15 +122,14 @@ export default function MapComponent({ tasks }) {
       />
 
       {Object.values(clusters).map((cluster) => {
-        // If multiple tasks at this location, spread them out in a circle
         const count = cluster.tasks.length;
-        const radius = 0.0003 * count; // Adjust spread based on count
+        const radius = 0.0003 * count; 
 
         return cluster.tasks.map((task, index) => {
           let finalLat = cluster.baseCoords.lat;
           let finalLng = cluster.baseCoords.lng;
 
-          // Apply jitter if more than one task
+          // Apply jitter 
           if (count > 1) {
             const angle = (index / count) * 2 * Math.PI;
             finalLat += radius * Math.cos(angle);

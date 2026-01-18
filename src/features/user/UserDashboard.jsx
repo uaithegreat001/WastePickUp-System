@@ -13,8 +13,9 @@ export default function UserDashboard() {
   const user = userData || { fullName: "User", email: "", phone: "" };
   const [recentPickups, setRecentPickups] = useState([]);
 
-  // Separate states for merging
+  // firestore data  
   const [firestoreData, setFirestoreData] = useState([]);
+  // local data
   const [localData, setLocalData] = useState([]);
 
   // for detail box
@@ -22,7 +23,7 @@ export default function UserDashboard() {
   const [detailType, setDetailType] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
 
-  // 1. Subscribe to Firestore (Online Data)
+  // Subscribe to Firestore (Online Data)
   useEffect(() => {
     if (!currentUser?.uid) return;
 
@@ -36,7 +37,7 @@ export default function UserDashboard() {
     return () => unsubscribe();
   }, [currentUser?.uid]);
 
-  // 2. Poll/Listen for Local Data (Offline/Syncing Data)
+  // fetch local data 
   const fetchLocalData = async () => {
     if (!currentUser?.uid) return;
     try {
@@ -44,7 +45,7 @@ export default function UserDashboard() {
       const formattedLocal = pending.map((item) => ({
         ...item,
         syncStatus: "pending",
-        id: `pending-${item.id}`, // Temporary ID for UI key
+        id: `pending-${item.id}`, 
       }));
       setLocalData(formattedLocal);
     } catch (error) {
@@ -52,12 +53,12 @@ export default function UserDashboard() {
     }
   };
 
+  // 
   useEffect(() => {
     fetchLocalData();
 
     const handleLocalUpdate = () => fetchLocalData();
-    // When sync completes, items are removed from local, so we refetch to clear them
-    // The firestore listener will pick them up as they appear online
+    // when sync completes
     const handleSyncComplete = () => fetchLocalData();
 
     window.addEventListener("localQueueUpdated", handleLocalUpdate);
@@ -69,13 +70,13 @@ export default function UserDashboard() {
     };
   }, [currentUser?.uid]);
 
-  // 3. Merge and Sort
+  // merge and sort data  
   useEffect(() => {
     const merged = [...firestoreData, ...localData];
     setRecentPickups(sortByCreatedAt(merged));
   }, [firestoreData, localData]);
 
-  // Sync selected item when data changes to keep detail view fresh
+  
   useEffect(() => {
     if (selected && showDetail) {
       const updatedItem = recentPickups.find((item) => item.id === selected.id);
@@ -118,7 +119,7 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* detail box for handling user pickup and order data */}
+      {/* detail box for handling user pickup requests */}
       <UserDetailBox
         type={detailType}
         data={selected}

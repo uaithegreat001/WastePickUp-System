@@ -24,7 +24,7 @@ export default function RequestPickup() {
     if (!currentUser?.uid) {
       handleError(
         new Error("User not authenticated"),
-        "Pickup Request Submission"
+        "Pickup Request Submission",
       );
       return;
     }
@@ -43,15 +43,13 @@ export default function RequestPickup() {
 
       if (result.offline) {
         toast.success(
-          "Request saved offline. It will sync when you're back online.",
+          "Request saved offline. It will sync when you're back online",
           {
             duration: 5000,
-          }
+          },
         );
       } else {
-        toast.success("Pickup requested successfully!", {
-          icon: "✅",
-        });
+        toast.success("Pickup requested successfully");
       }
     } catch (error) {
       handleError(error, "Pickup Request Submission");

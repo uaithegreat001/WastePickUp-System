@@ -7,7 +7,7 @@ import { AuthProvider } from "./features/auth/AuthContext.jsx";
 import { initSyncManager } from "./services/syncService";
 import { handleError } from "./lib/errorHandler";
 
-// Offline Icon Registration (Explicit Bundling)
+
 import { addIcon } from "@iconify/react";
 
 const dashboardSquare02 = {
@@ -81,7 +81,6 @@ const truckDelivery = {
   height: 24,
 };
 
-// Register icons globally
 addIcon("hugeicons:dashboard-square-02", dashboardSquare02);
 addIcon("hugeicons:user-group", userGroup);
 addIcon("hugeicons:settings-01", settings01);
@@ -97,7 +96,6 @@ addIcon("hugeicons:calendar-01", calendar01);
 addIcon("hugeicons:time-01", time01);
 addIcon("hugeicons:truck-delivery", truckDelivery);
 
-// Register Service Worker for Offline-First support
 registerSW({ immediate: true });
 
 // Error Boundary Component
@@ -117,7 +115,6 @@ class ErrorBoundary extends Component {
       errorInfo,
     });
 
-    // Use our error handler for logging
     handleError(error, "React Error Boundary");
   }
 
@@ -157,7 +154,7 @@ class ErrorBoundary extends Component {
                 marginRight: "10px",
               }}
             >
-              🔄 Refresh Page
+              
             </button>
             <button
               onClick={() =>
@@ -210,14 +207,12 @@ class ErrorBoundary extends Component {
   }
 }
 
-// Initialize Offline Sync Manager
 initSyncManager();
 
 // Enhanced global error handler
 window.onerror = function (message, source, lineno, colno, error) {
   handleError(error || new Error(message), "Global Runtime Error");
 
-  // Only show fallback UI if React hasn't mounted
   const root = document.getElementById("root");
   if (root && !root.hasChildNodes()) {
     root.innerHTML = `
@@ -225,13 +220,13 @@ window.onerror = function (message, source, lineno, colno, error) {
         <h1 style="font-size: 24px; margin-bottom: 10px;">🚨 Application Error</h1>
         <p>A critical error occurred while loading the application.</p>
         <button onclick="window.location.reload()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: '5px'; cursor: pointer; margin-top: 10px;">
-          🔄 Reload Application
+          Reload Application
         </button>
       </div>
     `;
   }
 
-  return false; // Prevent default error handling
+  return false;
 };
 
 createRoot(document.getElementById("root")).render(
@@ -241,5 +236,5 @@ createRoot(document.getElementById("root")).render(
         <App />
       </AuthProvider>
     </ErrorBoundary>
-  </StrictMode>
+  </StrictMode>,
 );

@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "@iconify/react";
 
-// text input field with optional error display
+// text input field 
 export function FormInput({
   label,
   error,
@@ -48,7 +48,7 @@ export function FormInput({
   );
 }
 
-// dropdown select with optional error display
+// dropdown select 
 export function FormSelect({
   label,
   error,
@@ -96,7 +96,7 @@ export function FormSelect({
   );
 }
 
-// textarea field with optional error display
+// textarea field 
 export function FormTextarea({
   label,
   error,
