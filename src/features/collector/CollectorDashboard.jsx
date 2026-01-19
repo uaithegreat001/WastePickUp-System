@@ -30,8 +30,8 @@ export default function CollectorDashboard() {
 
     return () => unsubscribe();
   }, [userData]);
-  
-  // handle collect 
+
+  // handle collect
   const handleCollect = async (task) => {
     if (completingTasks.has(task.id)) return;
 
@@ -43,7 +43,7 @@ export default function CollectorDashboard() {
       toast.info("User must pay before collection can be completed");
       return;
     }
-    
+
     setCompletingTasks((prev) => new Set(prev).add(task.id));
     try {
       await collectorService.completeTask(task.id);
@@ -59,7 +59,7 @@ export default function CollectorDashboard() {
       });
     }
   };
-  
+
   // handle payment success
   const handlePaymentSuccess = async (reference) => {
     if (!paymentTask) return;

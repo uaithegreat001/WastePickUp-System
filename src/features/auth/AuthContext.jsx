@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
             } else {
               // User authenticated fallback profile
               console.warn(
-                "User authenticated but no profile found in Firestore. Creating fallback profile."
+                "User authenticated but no profile found in Firestore. Creating fallback profile",
               );
               const fallbackPayload = {
                 email: user.email,
@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
           (error) => {
             console.error("Error fetching user data:", error);
             setLoading(false);
-          }
+          },
         );
 
         return () => {

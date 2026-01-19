@@ -86,7 +86,7 @@ export const authService = {
     }
   },
 
-  // Logout 
+  // Logout
   async logout() {
     try {
       await signOut(auth);

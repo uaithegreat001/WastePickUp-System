@@ -10,25 +10,32 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
+      includeAssets: ["vite.svg"],
       manifest: {
         name: "WastePickUp System",
         short_name: "WastePickUp",
-        description: "Network-Resilient Waste Management PWA",
+        description: "Installation support",
         theme_color: "#10b981",
         background_color: "#ffffff",
         display: "standalone",
-        // 
         icons: [
           {
             src: "pwa-192x192.png",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any",
           },
-          { 
+          {
             src: "pwa-512x512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: "pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
           },
         ],
       },

@@ -11,9 +11,8 @@ import {
 } from "firebase/firestore";
 import { toDate } from "../../lib/dateUtils";
 
-// Collector Service
 export const collectorService = {
-  // Subscribe to collector tasks
+  // subscribe to collector tasks
   subscribeToCollectorTasks(collectorName, callback) {
     try {
       const q = query(
@@ -49,7 +48,6 @@ export const collectorService = {
     }
   },
 
-  // Track task completion
   async completeTask(taskId, paymentVerified = false) {
     try {
       const taskRef = doc(db, "pickupRequests", taskId);
@@ -62,6 +60,7 @@ export const collectorService = {
         updateData.paymentStatus = "verified";
       }
 
+      // Mark task as collected
       await updateDoc(taskRef, updateData);
       return { success: true };
     } catch (error) {

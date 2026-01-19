@@ -1,9 +1,4 @@
-/* Utility functions for date handling */
-console.log("dateUtils.js loaded");
-
-/* Sorts an array of objects by createdAt */
 export function sortByCreatedAt(arr) {
-  console.log("sortByCreatedAt called with", arr.length, "items");
   return arr.sort((a, b) => {
     const dateA = toDate(a.createdAt);
     const dateB = toDate(b.createdAt);
@@ -44,8 +39,8 @@ export function formatDate(date, options = {}) {
       dateStyle === "short"
         ? "numeric"
         : dateStyle === "medium"
-        ? "short"
-        : "long",
+          ? "short"
+          : "long",
     day: "numeric",
   };
 

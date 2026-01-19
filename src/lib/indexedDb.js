@@ -2,7 +2,6 @@ const DB_NAME = "WastePickUpOfflineDB";
 const STORE_NAME = "pendingSync";
 const DB_VERSION = 1;
 
-// open offline database
 export const openOfflineDB = () => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -27,7 +26,7 @@ export const addToQueue = async (data) => {
   const tx = db.transaction(STORE_NAME, "readwrite");
   const store = tx.objectStore(STORE_NAME);
 
-  // add timestamp for conflict resolution 
+  // add timestamp for conflict resolution
   const queueItem = {
     ...data,
     queuedAt: new Date().toISOString(),
@@ -67,11 +66,10 @@ export const removeFromQueue = async (id) => {
 
 export const getPendingRequestsForUser = async (
   userId,
-  collection = "pickupRequests"
+  collection = "pickupRequests",
 ) => {
   const allPending = await getPendingQueue();
   return allPending.filter(
-    (item) => item.userId === userId && item.targetCollection === collection
+    (item) => item.userId === userId && item.targetCollection === collection,
   );
 };
-

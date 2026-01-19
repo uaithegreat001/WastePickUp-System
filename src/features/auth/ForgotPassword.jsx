@@ -44,7 +44,7 @@ export default function ForgotPassword() {
         handleCodeInApp: false,
       });
 
-      toast.success("Password reset link sent to your email");
+      toast.success("Password reset link sent to your email!");
     } catch (error) {
       if (error.code === "auth/user-not-found") {
         toast.error("Account not found please create one");

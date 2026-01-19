@@ -1,19 +1,19 @@
 export const ErrorTypes = {
-  // error types 
+
   NETWORK: "network",
-  // authentication errors
+  // no internet connection
   AUTH: "auth",
-  // validation errors
+  // invalid credentials
   VALIDATION: "validation",
-  // firestore errors
+  // invalid input
   FIRESTORE: "firestore",
-  // indexeddb errors
+  // database errors
   INDEXEDDB: "indexeddb",
-  // unknown errors
+  // local storage issues
   UNKNOWN: "unknown",
+  // Unknown errors
 };
 
-// get error type from error object
 export const getErrorType = (error) => {
   if (!navigator.onLine) return ErrorTypes.NETWORK;
   if (error.code === "permission-denied" || error.code === "unauthenticated")
@@ -33,32 +33,26 @@ export const getUserFriendlyMessage = (error, context = "") => {
   const type = getErrorType(error);
 
   const messages = {
-    // network errors
     [ErrorTypes.NETWORK]: {
       user: "Connection lost. Your request has been saved and will sync when you're back online",
       tech: `Network error in ${context}: ${error.message}`,
     },
-    // authentication errors
     [ErrorTypes.AUTH]: {
       user: "Please log in again to continue",
       tech: `Authentication error in ${context}: ${error.code} - ${error.message}`,
     },
-    // validation errors
     [ErrorTypes.VALIDATION]: {
       user: "Please check your input and try again",
       tech: `Validation error in ${context}: ${error.message}`,
     },
-    // firestore errors
     [ErrorTypes.FIRESTORE]: {
       user: "Server error occurred. Please try again later",
       tech: `Firestore error in ${context}: ${error.code} - ${error.message}`,
     },
-    // indexeddb errors
     [ErrorTypes.INDEXEDDB]: {
       user: "Local storage issue. Please refresh the page",
       tech: `IndexedDB error in ${context}: ${error.name} - ${error.message}`,
     },
-    // unknown errors
     [ErrorTypes.UNKNOWN]: {
       user: "Something went wrong. Please try again",
       tech: `Unknown error in ${context}: ${error.message || error}`,

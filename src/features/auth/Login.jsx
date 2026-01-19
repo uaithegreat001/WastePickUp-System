@@ -79,7 +79,7 @@ export default function Login() {
       const { userData } = result;
       const role = userData?.role || "user";
 
-      toast.success("Login successful");
+      toast.success("Login successful!");
 
       // Redirect based on role
       if (role === "admin") {

@@ -36,13 +36,14 @@ export default function MapComponent({ tasks }) {
           ? baseAddress
           : `${baseAddress}, Kano, Nigeria`;
 
+        // Geocode only if not already geocoded
         if (fullAddress && !coordinates[fullAddress]) {
           try {
             const coords = await geocodeLocation(fullAddress);
             newCoords[fullAddress] = coords;
           } catch (error) {
             console.error(`Failed to geocode ${fullAddress}:`, error);
-          // Use default coordinates for Kano if geocoding fails
+            // Use default coordinates for Kano if geocoding fails
             const randomOffset = (Math.random() - 0.5) * 0.002;
             newCoords[fullAddress] = {
               lat: 12.0022 + randomOffset,
@@ -123,13 +124,13 @@ export default function MapComponent({ tasks }) {
 
       {Object.values(clusters).map((cluster) => {
         const count = cluster.tasks.length;
-        const radius = 0.0003 * count; 
+        const radius = 0.0003 * count;
 
         return cluster.tasks.map((task, index) => {
           let finalLat = cluster.baseCoords.lat;
           let finalLng = cluster.baseCoords.lng;
 
-          // Apply jitter 
+          // Apply jitter
           if (count > 1) {
             const angle = (index / count) * 2 * Math.PI;
             finalLat += radius * Math.cos(angle);
