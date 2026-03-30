@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
 const axios = require("axios");
-require("dotenv").config(); // Loads variables from .env file into process.env
+require("dotenv").config(); 
 
 const app = express();
 app.use(cors()); 

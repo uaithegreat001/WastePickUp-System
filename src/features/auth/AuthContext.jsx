@@ -15,21 +15,26 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribeUser = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // Clean up previous user listener if it exists
+      if (unsubscribeUser) {
+        unsubscribeUser();
+        unsubscribeUser = null;
+      }
+
       setCurrentUser(user);
+
       if (user) {
-        // Real-time listener for user profile
         const userRef = doc(db, "users", user.uid);
-        const unsubscribeUser = onSnapshot(
+        unsubscribeUser = onSnapshot(
           userRef,
           async (docSnapshot) => {
             if (docSnapshot.exists()) {
               setUserData(docSnapshot.data());
             } else {
-              // User authenticated fallback profile
-              console.warn(
-                "User authenticated but no profile found in Firestore. Creating fallback profile",
-              );
+              console.warn("No profile found, creating fallback");
               const fallbackPayload = {
                 email: user.email,
                 fullName: "Restored User",
@@ -41,7 +46,6 @@ export function AuthProvider({ children }) {
                 await setDoc(userRef, fallbackPayload);
                 setUserData(fallbackPayload);
               } catch (error) {
-                console.error("Error creating fallback profile:", error);
                 setUserData(null);
               }
             }
@@ -52,10 +56,6 @@ export function AuthProvider({ children }) {
             setLoading(false);
           },
         );
-
-        return () => {
-          unsubscribeUser();
-        };
       } else {
         setUserData(null);
         setLoading(false);
@@ -66,6 +66,7 @@ export function AuthProvider({ children }) {
 
     return () => {
       unsubscribe();
+      if (unsubscribeUser) unsubscribeUser();
       clearTimeout(timeout);
     };
   }, []);
@@ -89,7 +90,6 @@ export function AuthProvider({ children }) {
   };
 
   return (
-
     <AuthContext.Provider value={value}>
       {loading ? (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">

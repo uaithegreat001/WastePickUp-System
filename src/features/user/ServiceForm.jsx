@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Icon } from "@iconify/react";
 import { PaystackButton } from "react-paystack";
 import axios from "axios";
@@ -6,6 +6,7 @@ import { FormInput, FormSelect } from "../../components/reusable/FormInput";
 import { SERVICE_AREAS } from "../../lib/constants";
 import { adminService } from "../admin/adminService";
 import toast from "react-hot-toast";
+import { reverseGeocode } from "../../services/geocodingService";
 
 const DEFAULT_PICKUP_PRICES = [
   { value: "50", label: "50 Litres", price: 500 },
@@ -24,9 +25,77 @@ export default function ServiceForm({ onSubmit, userData }) {
     contactPhone: "",
     binSize: "",
     paymentMethod: "onPickup", // Default to pickup
+    latitude: null,
+    longitude: null,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [detecting, setDetecting] = useState(false);
   const [total, setTotal] = useState(0);
+  const locationDetected = useRef(false);
+
+  // Auto-detect location on mount
+  useEffect(() => {
+    let toastId;
+    const detectLocation = async () => {
+      if (!navigator.geolocation || locationDetected.current) return;
+      locationDetected.current = true;
+
+      setDetecting(true);
+      toastId = toast.loading("Detecting your location...");
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const geoData = await reverseGeocode(latitude, longitude);
+
+            // Map detected LGA to SERVICE_AREAS
+            const matchedArea = SERVICE_AREAS.find(
+              (area) =>
+                geoData.lga &&
+                (area.lga.toLowerCase().includes(geoData.lga.toLowerCase()) ||
+                  geoData.lga.toLowerCase().includes(area.lga.toLowerCase())),
+            );
+
+            setForm((prev) => ({
+              ...prev,
+              location: geoData.address,
+              serviceArea: matchedArea?.lga || prev.serviceArea,
+              latitude,
+              longitude,
+            }));
+
+            toast.success("Location detected", { id: toastId });
+          } catch (error) {
+            console.error("Reverse geocoding failed:", error);
+            // Even if reverse geocoding fails, we still have the coords
+            setForm((prev) => ({ ...prev, latitude, longitude }));
+            toast.error(
+              "Could not determine address, but coordinates captured",
+              { id: toastId },
+            );
+          } finally {
+            setDetecting(false);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          let msg = "Could not detect location";
+          if (error.code === 1)
+            msg = "Location access denied. Please enter address manually.";
+          toast.error(msg, { id: toastId });
+          setDetecting(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 },
+      );
+    };
+
+    detectLocation();
+
+    return () => {
+      if (toastId) toast.dismiss(toastId);
+    };
+  }, []);
 
   useEffect(() => {
     const litres = parseFloat(form.binSize) || 0;
@@ -46,6 +115,8 @@ export default function ServiceForm({ onSubmit, userData }) {
       await onSubmit({
         location: form.location,
         lga: area?.lga || form.serviceArea,
+        latitude: form.latitude,
+        longitude: form.longitude,
         contactPhone: form.contactPhone || userData?.phone || "",
         binSize: parseFloat(form.binSize) || 0,
         amount: total,
@@ -61,7 +132,7 @@ export default function ServiceForm({ onSubmit, userData }) {
       setSubmitting(false);
     }
   };
-  
+
   const handlePaystackSuccess = async (reference) => {
     setSubmitting(true);
     const toastId = toast.loading("Verifying payment...");
@@ -80,6 +151,8 @@ export default function ServiceForm({ onSubmit, userData }) {
       await onSubmit({
         location: form.location,
         lga: area?.lga || form.serviceArea,
+        latitude: form.latitude,
+        longitude: form.longitude,
         contactPhone: form.contactPhone || userData?.phone || "",
         binSize: parseFloat(form.binSize) || 0,
         amount: total,
@@ -104,6 +177,8 @@ export default function ServiceForm({ onSubmit, userData }) {
       contactPhone: "",
       binSize: "",
       paymentMethod: "onPickup",
+      latitude: null,
+      longitude: null,
     });
     setTotal(0);
   };
@@ -135,7 +210,9 @@ export default function ServiceForm({ onSubmit, userData }) {
               label="Pickup Location"
               value={form.location}
               onChange={(e) => updateField("location", e.target.value)}
-              placeholder="Enter full location"
+              placeholder={
+                detecting ? "Detecting location..." : "Enter full location"
+              }
               className="md:col-span-2"
               required
             />

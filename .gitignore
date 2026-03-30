@@ -16,6 +16,8 @@ dist-ssr
 
 # Environment variables (SECRET 🔒 Fire base API and others API)
 .env
+.env.*
+*.env
 .env.local
 .env.*.local
 

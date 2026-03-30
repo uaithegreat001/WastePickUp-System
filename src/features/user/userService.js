@@ -29,6 +29,8 @@ export const userService = {
         userName: requestData.userName,
         location: requestData.location,
         lga: requestData.lga,
+        latitude: requestData.latitude || null,
+        longitude: requestData.longitude || null,
         contactPhone: requestData.contactPhone,
         binSize: requestData.binSize,
         amount: requestData.amount,
@@ -58,7 +60,7 @@ export const userService = {
 
       const docRef = doc(db, "pickupRequests", requestId);
       await setDoc(docRef, payload);
-      
+
       const paymentPayload = {
         userId: payload.userId,
         requestId: requestId,

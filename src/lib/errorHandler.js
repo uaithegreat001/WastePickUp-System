@@ -1,5 +1,4 @@
 export const ErrorTypes = {
-
   NETWORK: "network",
   // no internet connection
   AUTH: "auth",
@@ -73,7 +72,8 @@ export const handleError = (
 
   if (showToast) {
     import("react-hot-toast").then(({ toast }) => {
-      toast.error(message);
+      // Use message as ID to prevent duplicates from stacking
+      toast.error(message, { id: message });
     });
   }
 
